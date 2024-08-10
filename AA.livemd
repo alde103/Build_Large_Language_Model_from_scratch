@@ -1,0 +1,68 @@
+# Introduction to PyTorch (Elixir mimic)
+
+```elixir
+Mix.install(
+  [
+    {:axon, "~> 0.6"},
+    {:nx, "~> 0.7"},
+    {:kino, "~> 0.8"},
+    {:scidata, "~> 0.1"},
+    {:exla, ">= 0.0.0"}
+  ],
+  #config: [nx: [default_backend: {EXLA.Backend, client: :cuda}]]
+  config: []
+)
+
+```
+
+## Section
+
+```elixir
+tensor0d=Nx.tensor(1)
+
+tensor1d=Nx.tensor([1, 2, 3])
+
+tensor2d=Nx.tensor([[1, 2], [3, 4]])
+
+tensor3d=Nx.tensor([[[1, 2], [3, 4]], [[1, 2], [3, 4]]])
+
+{tensor0d, tensor1d, tensor2d, tensor3d}
+```
+
+```elixir
+tensor1d.type
+```
+
+```elixir
+floatvec = Nx.tensor([1.0, 2.0, 3.0])
+```
+
+```elixir
+f32_tensor1d = Nx.as_type(tensor1d, :f32)
+
+{f32_tensor1d, tensor1d}
+```
+
+## Common PyTorch tensor operations
+
+```elixir
+tensor2d = Nx.tensor([[1, 2, 3], [4, 5, 6]])
+```
+
+```elixir
+tensor2d.shape
+```
+
+```elixir
+reshaped_t2d = Nx.reshape(tensor2d, {3, 2})
+```
+
+```elixir
+transposed_t2d = Nx.transpose(tensor2d)
+```
+
+```elixir
+Nx.dot(tensor2d, transposed_t2d)
+```
+
+## A.3 Seeing models as computation graphs
