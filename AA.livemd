@@ -15,7 +15,7 @@ Mix.install(
 
 ```
 
-## Section
+## Scalars, vectors, matrices, and tensors
 
 ```elixir
 tensor0d=Nx.tensor(1)
@@ -66,3 +66,63 @@ Nx.dot(tensor2d, transposed_t2d)
 ```
 
 ## A.3 Seeing models as computation graphs
+
+PyTorch's autograd system provides functions to compute gradients in dynamic computational graphs automatically.
+
+A computational graph (or computation graph in short) is a directed graph that allows us to express and visualize mathematical expressions. A computation graph lays out the sequence of calculations needed to compute the output of a neural network.
+
+```elixir
+# label (true)
+y = Nx.tensor([1])
+# input feature
+x1 = Nx.tensor([1.1])
+# weight parameter
+w1 = Nx.tensor([2.2])
+# bias unit
+b = Nx.tensor([0.0])
+# net input
+# z = x1 * w1 + b
+z = 
+  x1
+  |> Nx.multiply(w1)
+  |> Nx.add(b)
+# activation & output
+a = Axon.Activations.sigmoid(z)
+loss = Axon.Losses.binary_cross_entropy(y, a)
+
+# fun = Nx.Defn.grad(fn x -> Nx.sin(x) end)
+# fun.(Nx.tensor([0]))
+```
+
+## A.4 Automatic differentiation made easy
+
+Computations graph in PyTorch, the graph will be build internally by default if one of its terminal nodes has the requires_grad attribute set to True. Gradients are required when training neural networks via the popular backpropagation algorithm,
+which can be thought of as an implementation of the chain rule from calculus for neural networks.
+
+The most common way of computing the loss gradients in a computation graph involves applying the
+chain rule from right to left, which is also called reverse-model automatic differentiation or backpropagation.
+
+**PARTIAL DERIVATIVES AND GRADIENTS**
+
+Partial derivatives measure the rate at which a function changes with
+respect to one of its variables. A gradient is a vector containing all of the partial derivatives of a
+multivariate function, a function with more than one variable as input.
+
+By tracking every operation performed on
+tensors, PyTorch's autograd engine constructs a computational graph in the background. Then,
+calling the grad function, we can compute the gradient of the loss with respect to model parameters.
+
+```elixir
+net_fn = 
+  fn(w1, b) ->
+    forward_pass =
+      x1
+      |> Nx.multiply(w1)
+      |> Nx.add(b)
+      |> Axon.Activations.sigmoid()
+
+    Axon.Losses.binary_cross_entropy(y, forward_pass)
+  end
+
+net_grad = Nx.Defn.grad({w1, b}, fn {w1, b} -> net_fn.(w1, b) end)
+```
