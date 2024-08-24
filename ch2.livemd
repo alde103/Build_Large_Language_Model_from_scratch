@@ -1,0 +1,88 @@
+# Chapter 2: Working with Text Data
+
+```elixir
+Mix.install([
+  {:nx, "~> 0.5"},
+  {:exla, "~> 0.5"},
+  {:axon, "~> 0.5"}
+])
+```
+
+## 2.1 Understanding word embeddings
+
+The concept of converting data into a vector format is often referred to as embedding.
+
+Embedding model to transform this raw data into a dense vector representation that deep
+learning architectures can easily understand and process.
+
+Different data formats require distinct embedding models.
+
+An embedding is a mapping from discrete objects, such as words, images, or
+even entire documents, to points in a continuous vector space.
+
+The primary purpose of embeddings is to convert non-numeric data into a format that neural networks can process.
+
+Retrieval-augmented generation combines generation (like producing text) with retrieval (like searching an external knowledge base) to pull relevant information when generating text, which is a technique that is beyond the scope of this book.
+
+A higher dimensionality might capture more nuanced relationships but at the cost of computational efficiency.
+
+LLMs commonly produce their own embeddings that are part of the input layer and are updated during training.
+
+The embedding size is a trade-off between performance and efficiency.
+
+## 2.2 Tokenizing text
+
+Tokens are either individual words or special characters, including punctuation characters.
+
+```elixir
+path = 
+  "/home/alde/Documents/MyDevelopment/Build_A_Large_Language_Model/the-verdict.txt"
+{:ok, raw_text} = File.read(path)
+```
+
+```elixir
+String.length(raw_text) |> IO.inspect()
+```
+
+```elixir
+{line, rest} = String.split_at(raw_text, 99)
+IO.puts(line)
+```
+
+```elixir
+text = "Hello, world. This, is a test."
+
+{:ok, regex} = Regex.compile("(\s)")
+Regex.split(regex, text, include_captures: true)
+```
+
+```elixir
+{:ok, regex} = Regex.compile("([,.]|\s)")
+result = Regex.split(regex, text, include_captures: true)
+```
+
+```elixir
+Enum.filter(result, fn x -> not (x == " " or x == "") end)
+```
+
+Removing whitespaces reduces the memory and computing requirements. However, keeping whitespaces can be useful if we train models that are sensitive to the exact structure of the text (for example, Python code, which is sensitive to indentation and spacing).
+
+```elixir
+text = "Hello, world. Is this-- a test?"
+{:ok, regex} = Regex.compile("([,.:;?_!\"()\']|--|\s)")
+result = Regex.split(regex, text, include_captures: true)
+Enum.filter(result, fn x -> not (x == " " or x == "") end)
+```
+
+```elixir
+result = Regex.split(regex, raw_text, include_captures: true)
+preprocessed = Enum.filter(result, fn x -> not (x == " " or x == "") end)
+Enum.count(preprocessed) |> IO.inspect()
+```
+
+```elixir
+{head, tail} = Enum.split(preprocessed, 30)
+IO.inspect(head)
+```
+
+## 2.3 Converting tokens into token IDs

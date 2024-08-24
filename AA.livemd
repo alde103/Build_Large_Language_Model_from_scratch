@@ -7,7 +7,8 @@ Mix.install(
     {:nx, "~> 0.7"},
     {:kino, "~> 0.8"},
     {:scidata, "~> 0.1"},
-    {:exla, ">= 0.0.0"}
+    {:exla, ">= 0.0.0"},
+    {:table_rex, "~> 3.1.1"}
   ],
   #config: [nx: [default_backend: {EXLA.Backend, client: :cuda}]]
   config: []
@@ -125,4 +126,57 @@ net_fn =
   end
 
 net_grad = Nx.Defn.grad({w1, b}, fn {w1, b} -> net_fn.(w1, b) end)
+```
+
+## A.5 Implementing multilayer neural networks
+
+When implementing a neural network in PyTorch, we typically subclass the torch.nn.Module class to
+define our own custom network architecture.
+
+It allows us to encapsulate layers and
+operations and keep track of the model's parameters.
+
+Within this subclass, we define the network layers in the __init__ constructor and specify how
+they interact in the forward method. The forward method describes how the input data passes
+through the network and comes together as a computation graph.
+
+In contrast, the backward method, which we typically do not need to implement ourselves, is
+used during training to compute gradients of the loss function with respect to the model
+parameters
+
+```elixir
+# Building the Model
+
+model =
+  # a model that takes an input shape of {nil, 784}
+  Axon.input("images", shape: {nil, 50})
+  # hidden layer 1 of 30 neurons. 
+  |> Axon.dense(30, activation: :relu)
+  # hidden layer 2 of 20 outputs.
+  |> Axon.dense(20, activation: :relu)
+  # output layer of 3 outputs.
+  |> Axon.dense(3, activation: :softmax)
+
+```
+
+```elixir
+# Graphic display:
+template = Nx.template({1, 50}, :f32)
+Axon.Display.as_table(model, template)
+|> IO.puts
+```
+
+```elixir
+{init_fn, predict_fn} = Axon.build(model, compiler: EXLA)
+
+key = Nx.Random.key(123)
+{random_input, _new_key} = Nx.Random.uniform(key, shape: {1, 50}, type: :f32)
+
+params = init_fn.(template, %{})
+
+predict_fn.(params, random_input)
+```
+
+```elixir
+
 ```
