@@ -4,7 +4,8 @@
 Mix.install([
   {:nx, "~> 0.5"},
   {:exla, "~> 0.5"},
-  {:axon, "~> 0.5"}
+  {:axon, "~> 0.5"},
+  {:tiktoken, "~> 0.3.2"},
 ])
 ```
 
@@ -257,3 +258,35 @@ as the following:
   `[PAD]` token, up to the length of the longest text in the batch.
 
 When training on batched inputs, we typically use a mask, meaning we don't attend to padded tokens. Thus, the specific token chosen for padding becomes inconsequential.
+
+## 2.5 Byte pair encoding
+
+This section covers a more sophisticated tokenization scheme based on a concept
+called byte pair encoding (BPE).
+
+In Elixir there is also an tiktoken wrapper, to add it to the project use:
+`{:tiktoken, "~> 0.3.2"}`
+
+```elixir
+text = "Hello, do you like tea? <|endoftext|> In the sunlit terraces of someunknownPlace."
+
+# gpt2 not supported
+{:ok, ids} = Tiktoken.encode("gpt-3.5-turbo", text, ["<|endoftext|>"])
+```
+
+```elixir
+Tiktoken.decode("gpt-3.5-turbo", ids)
+```
+
+```elixir
+Tiktoken.decode("gpt-4", ids)
+```
+
+The BPE tokenizer can handle any unknown word.
+
+The algorithm underlying BPE breaks down words that aren't in its predefined vocabulary
+into smaller subword units or even individual characters, enabling it to handle out-of-
+vocabulary words.
+
+The algorithm builds its vocabulary by iteratively merging frequent characters into subwords and
+frequent subwords into words.The merges are determined by a frequency cutoff.
