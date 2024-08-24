@@ -156,4 +156,104 @@ text = "Hello, do you like tea?"
 ids = SimpleTokenizerV1.encode(vocabulary, text)
 ```
 
+## 2.4 Adding special context tokens
 
+To handle certain contexts. We add an `<|unk|>` token to represent new and unknown words that were not part of the training data and thus not part of the existing vocabulary. 
+Furthermore, we add an `<|endoftext|>` token that we can use to separate two unrelated text sources.
+
+```elixir
+build_vocabulary = fn text ->
+  {:ok, regex} = Regex.compile("([,.:;?_!\"()\']|--|\s)")
+
+  Regex.split(regex, text, include_captures: true)
+  |> Enum.map(fn token -> String.trim(token, "\n") end)
+  |> Enum.filter(fn x -> not (x == " " or x == "") end)
+  |> Enum.uniq()
+  |> Enum.sort()
+  |> Enum.concat(["<|endoftext|>", "<|unk|>"])
+  |> Enum.with_index()
+  |> Enum.reduce(%{}, fn {value, index}, acc -> Map.put(acc, value, index) end)
+end
+
+build_reverse_vocabulary = fn vocabulary ->
+  vocabulary
+  |> Enum.map(fn {key, value} -> {value, key} end)
+  |> Enum.into(%{})
+end
+```
+
+```elixir
+vocabulary = build_vocabulary.(raw_text)
+reverse_vocabulary = build_reverse_vocabulary.(vocabulary)
+```
+
+```elixir
+vocabulary["<|unk|>"]
+```
+
+```elixir
+Enum.count(vocabulary)
+```
+
+```elixir
+vocabulary["yourself"]
+```
+
+```elixir
+defmodule SimpleTokenizerV2 do
+  def encode(vocabulary, text) do
+    {:ok, regex} = Regex.compile("([,.:;?_!\"()\']|--|\s)")
+    result = Regex.split(regex, text, include_captures: true)
+    preprocessed = Enum.filter(result, fn x -> not (x == " " or x == "") end)
+
+    Enum.map(
+      preprocessed,
+      fn token ->
+        id = Map.get(vocabulary, token)
+        if is_nil(id), do: Map.get(vocabulary, "<|unk|>"), else: id
+      end
+    )
+  end
+
+  def decode(reverse_vocabulary, ids) do
+    tokens = Enum.map(ids, fn id -> Map.get(reverse_vocabulary, id) end)
+    text = Enum.reduce(tokens, "", fn token, acc -> acc <> token <> " " end)
+    {:ok, regex} = Regex.compile("\s+([,.?!\"()\'])")
+    String.replace(text, regex, "\\1")
+  end
+end
+```
+
+```elixir
+text1 = "Hello, do you like tea?"
+text2 = "In the sunlit terraces of the palace."
+text = text1 <> " <|endoftext|> " <> text2
+IO.puts(text)
+```
+
+```elixir
+ids = SimpleTokenizerV2.encode(vocabulary, text)
+```
+
+```elixir
+SimpleTokenizerV2.decode(reverse_vocabulary, ids)
+```
+
+Depending on the LLM, some researchers also consider additional special tokens such
+as the following:
+
+* `[BOS]` (beginning of sequence): This token marks the start of a text. It
+  signifies to the LLM where a piece of content begins.
+
+* `[EOS]` (end of sequence): This token is positioned at the end of a text,
+  and is especially useful when concatenating multiple unrelated texts,
+  similar to `<|endoftext|>`. For instance, when combining two different
+  Wikipedia articles or books, the `[EOS]` token indicates where one article
+  ends and the next one begins.
+
+* `[PAD]` (padding): When training LLMs with batch sizes larger than one,
+  the batch might contain texts of varying lengths. To ensure all texts have
+  the same length, the shorter texts are extended or "padded" using the
+  `[PAD]` token, up to the length of the longest text in the batch.
+
+When training on batched inputs, we typically use a mask, meaning we don't attend to padded tokens. Thus, the specific token chosen for padding becomes inconsequential.
