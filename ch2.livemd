@@ -86,3 +86,74 @@ IO.inspect(head)
 ```
 
 ## 2.3 Converting tokens into token IDs
+
+In this section, we will convert these tokens from strings to an integer
+representation to produce the so-called token IDs.
+
+This conversion is an intermediate step before converting the token IDs into embedding vectors.
+
+To map the previously generated tokens into token IDs, we have to build a so-called vocabulary first.
+
+We build a vocabulary by tokenizing the entire text in a training dataset into individual tokens.
+
+These individual tokens are then sorted alphabetically, and duplicate tokens are removed.
+
+The unique tokens are then aggregated into a vocabulary that defines a mapping from each unique token to a unique integer value.
+
+The depicted vocabulary is purposefully small for illustration purposes and contains no punctuation or special characters for simplicity.
+
+```elixir
+vocabulary =
+  preprocessed
+  |> Enum.uniq()
+  |> Enum.sort()
+  |> Enum.with_index()
+  |> Enum.reduce(%{}, fn {value, index}, acc -> Map.put(acc, value, index) end)
+```
+
+when we want to convert the outputs of an LLM from numbers back into
+text, we also need a way to turn token IDs into text.
+
+```elixir
+defmodule SimpleTokenizerV1 do
+  def encode(vocabulary, text) do
+    {:ok, regex} = Regex.compile("([,.:;?_!\"()\']|--|\s)")
+    result = Regex.split(regex, text, include_captures: true)
+    preprocessed = Enum.filter(result, fn x -> not (x == " " or x == "") end)
+    Enum.map(preprocessed, fn token -> Map.get(vocabulary, token) end)
+  end
+
+  def decode(reverse_vocabulary, ids) do
+    tokens = Enum.map(ids, fn id -> Map.get(reverse_vocabulary, id) end)
+    text = Enum.reduce(tokens, "", fn token, acc -> acc <> token <> " " end)
+    {:ok, regex} = Regex.compile("\s+([,.?!\"()\'])")
+    String.replace(text, regex, "\\1")
+  end
+end
+```
+
+```elixir
+reverse_vocabulary = 
+  vocabulary
+  |> Enum.map(fn {key, value} -> {value, key} end)
+  |> Enum.into(%{})
+```
+
+```elixir
+text = """
+It's the last he painted, you know," Mrs. Gisburn said with pardonable pride.\
+"""
+ids = SimpleTokenizerV1.encode(vocabulary, text)
+```
+
+```elixir
+SimpleTokenizerV1.decode(reverse_vocabulary, ids)
+```
+
+```elixir
+text = "Hello, do you like tea?"
+
+ids = SimpleTokenizerV1.encode(vocabulary, text)
+```
+
+
