@@ -428,6 +428,41 @@ the token ID from the embedding layer's weight matrix.
 
 ## 2.8 Encoding word positions
 
-```elixir
+A minor shortcoming of LLMs is that their self-attention mechanism, sinces it doesn't have a notion of position or order for the tokens within a sequence.
 
+The same token ID always gets mapped to the same vector representation, regardless of where the token ID is positioned in the input sequence.
+
+In principle, the deterministic, position-independent embedding of the token ID is good for
+reproducibility purposes. However, since the self-attention mechanism of LLMs itself is also
+position-agnostic, it is helpful to inject additional position information into the LLM.
+
+Absolute positional embeddings are directly associated with specific positions in a
+sequence. For each position in the input sequence, a unique embedding is added to the
+token's embedding to convey its exact location.
+
+Instead of focusing on the absolute position of a token, the emphasis of relative positional
+embeddings is on the relative position or distance between tokens. This means the model
+learns the relationships in terms of "how far apart" rather than "at which exact position."
+The advantage here is that the model can generalize better to sequences of varying
+lengths, even if it hasn't seen such lengths during training.
+
+```elixir
+# For a GPT model's absolute embedding approach, we just need to create another
+# embedding layer that has the same dimension as the token_embedding_layer
+vocabulary_size = 100257
+output_dim = 256
+
+dummy_model =
+  Axon.input("txt")
+  |> Axon.embedding(vocabulary_size, output_dim) # token_embedding_layer
+  |> Axon.embedding(context_size, output_dim) # token_embedding_layer
 ```
+
+```elixir
+Nx.iota({10}) |> Nx.multiply(-1) 
+```
+
+The input processing pipeline, input text is first broken up into individual tokens. These
+tokens are then converted into token IDs using a vocabulary. The token IDs are converted into embedding
+vectors to which positional embeddings of a similar size are added, resulting in input embeddings that are used
+as input for the main LLM layers.
