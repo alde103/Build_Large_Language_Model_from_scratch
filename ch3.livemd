@@ -41,6 +41,28 @@ relies solely on the current hidden state, which encapsulates all relevant infor
 can lead to a loss of context, especially in complex sentences where dependencies might
 span long distances.
 
+## 3.2 Capturing data dependencies with attention mechanisms
+
+RNNs work fine for translating short
+sentences but don't work well for longer texts as they don't have direct access to previous
+words in the input.
+
+The Bahdanau attention mechanism for RNNs modifies the encoder-
+decoder RNN such that the decoder can selectively access different parts of the input
+sequence at each decoding step. The importance is determined by the so-called attention weights
+
+researchers found that RNN architectures are not
+required for building deep neural networks for natural language processing and proposed
+the original transformer architecture with a self-attention
+mechanism inspired by the Bahdanau attention mechanism.
+
+Self-attention is a mechanism that allows each position in the input sequence to attend
+to all positions in the same sequence when computing the representation of a sequence.
+
+Self-attention is a mechanism in transformers that is used to compute more efficient input
+representations by allowing each position in a sequence to interact with and weigh the importance of all other
+positions within the same sequence.
+
 ```elixir
 
 ```
