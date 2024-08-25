@@ -6,6 +6,7 @@ Mix.install([
   {:exla, "~> 0.5"},
   {:axon, "~> 0.5"},
   {:tiktoken, "~> 0.3.2"},
+  {:table_rex, "~> 3.1.1"},
 ])
 ```
 
@@ -349,8 +350,8 @@ defmodule GPTDatasetV1 do
               {input_ids, target_ids}
 
             true ->
-              input_chunk = token_ids_tensor[i..(i + max_length)]
-              target_chunk = token_ids_tensor[(i + 1)..(i + max_length + 1)]
+              input_chunk = token_ids_tensor[i..(i + max_length - 1)]
+              target_chunk = token_ids_tensor[(i + 1)..(i + max_length)]
               {input_ids ++ [input_chunk], target_ids ++ [target_chunk]}
           end
 
@@ -369,4 +370,64 @@ dataset = GPTDatasetV1.build_dataset(raw_text, "gpt-3.5-turbo", 4, 4)
 {:ok, target_text} = dataset[:target_ids] |> Enum.at(1) |> Nx.to_list() |> then(fn ids -> Tiktoken.decode("gpt-3.5-turbo", ids) end)
 IO.puts("INPUT> #{input_text}\n")
 IO.puts("TARGET> #{target_text}")
+```
+
+```elixir
+input_ids = Nx.stack(dataset[:input_ids])
+```
+
+```elixir
+target_ids = Nx.stack(dataset[:target_ids])
+```
+
+## 2.7 Creating token embeddings
+
+The last step for preparing the input text for LLM training is to convert the token IDs into
+embedding vectors.
+
+We initialize these embedding weights with random values as a preliminary step. This initialization
+serves as the starting point for the LLM's learning process.
+
+A continuous vector representation, or embedding, is necessary since GPT-like LLMs are
+deep neural networks trained with the backpropagation algorithm.
+
+```elixir
+# embedding_layer = torch.nn.Embedding(vocab_size, output_dim)
+# Axon equivalent to pytorch is Axon.embedding()
+dummy_model =
+  Axon.input("txt", shape: {1})
+  |> Axon.embedding(6, 3)
+```
+
+```elixir
+template = Nx.template({1, 1}, :s64)
+Axon.Display.as_table(dummy_model, template)
+|> IO.puts
+```
+
+```elixir
+{init_fn, predict_fn} = Axon.build(dummy_model)
+
+params = init_fn.(template, %{})
+dbg(params)
+
+input = Nx.tensor([3])
+predict_fn.(params, input)
+```
+
+It matches with the 4 row, the embedding layer is essentially a look-up
+operation that retrieves rows from the embedding layer's weight matrix via a token ID.
+
+```elixir
+input = Nx.tensor([2, 3, 5, 1])
+predict_fn.(params, input)
+```
+
+Embedding layers perform a look-up operation, retrieving the embedding vector corresponding to
+the token ID from the embedding layer's weight matrix.
+
+## 2.8 Encoding word positions
+
+```elixir
+
 ```
