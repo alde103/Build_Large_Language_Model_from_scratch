@@ -63,6 +63,138 @@ Self-attention is a mechanism in transformers that is used to compute more effic
 representations by allowing each position in a sequence to interact with and weigh the importance of all other
 positions within the same sequence.
 
-```elixir
+## 3.3 Attending to different parts of the input with self-attention
 
+Self-attention serves as the cornerstone of every LLM based on the transformer architecture.
+
+In self-attention, the "self" refers to the mechanism's ability to compute attention
+weights by relating different positions within a single input sequence. It assesses and
+learns the relationships and dependencies between various parts of the input itself,
+such as words in a sentence or pixels in an image. This is in contrast to traditional
+attention mechanisms, where the focus is on the relationships between elements of
+two different sequences, such as in sequence-to-sequence models where the
+attention might be between an input sequence and an output sequence.
+
+**3.3.1 A simple self-attention mechanism without trainable weights**
+
+The goal of self-attention is to compute a context vector, for each input element, that combines
+information from all other input elements.
+
+In self-attention, our goal is to calculate context vectors z^(i) for each element x^(i) in the
+input sequence. A context vector can be interpreted as an enriched embedding vector.
+
+In self-attention, context vectors play a crucial role. Their purpose is to create enriched
+representations of each element in an input sequence (like a sentence). This is
+essential in LLMs, which need to understand the relationship and relevance of words in a
+sentence to each other.
+
+```elixir
+inputs =
+  Nx.tensor(
+    [
+      # Your (x^1)
+      [0.43, 0.15, 0.89],
+      # journey (x^2)
+      [0.55, 0.87, 0.66],
+      # starts (x^3)
+      [0.57, 0.85, 0.64],
+      # with (x^4)
+      [0.22, 0.58, 0.33],
+      # one (x^5)
+      [0.77, 0.25, 0.10],
+      # step (x^6)
+      [0.05, 0.80, 0.55]
+    ]
+  )
 ```
+
+The first step of implementing self-attention is to compute the intermediate values ω, referred to as attention.
+
+A dot product is essentially just a concise way of multiplying two vectors element-wise and then summing the products.
+
+The dot product is a measure of similarity because it
+quantifies how much two vectors are aligned: a higher dot product indicates a
+greater degree of alignment or similarity between the vectors. In the context of self-
+attention mechanisms, the dot product determines the extent to which elements in a
+sequence attend to each other: the higher the dot product, the higher the similarity
+and attention score between two elements.
+
+```elixir
+Nx.dot(inputs, inputs[1])
+```
+
+```elixir
+{sequence_size, _dim} = inputs.shape
+
+attn_scores =
+  for i <- 0..(sequence_size - 1), reduce: [] do
+    acc ->
+      score = Nx.dot(inputs, inputs[i])
+      acc ++ [score]
+  end
+```
+
+```elixir
+attn_scores_tensor = Nx.stack(attn_scores)
+```
+
+```elixir
+# for-loops are generally slow, and we can achieve the 
+# same results using matrix multiplication
+Nx.dot(inputs, Nx.transpose(inputs))
+```
+
+The next step is normalization.
+
+This normalization is a convention that is useful for interpretation and for
+maintaining training stability in an LLM.
+
+```elixir
+attn_sum = Nx.sum(attn_scores_tensor, axes: [1])
+attn_score_norm_tensor = Nx.divide(attn_scores_tensor, attn_sum) |> Nx.transpose()
+```
+
+```elixir
+attn_sum = Nx.sum(attn_score_norm_tensor, axes: [1])
+```
+
+```elixir
+# In practice, it's more common and advisable to use the softmax 
+# function for normalization.
+softmax_naive = fn x ->
+  exp_x = Nx.exp(x)
+  exp_x
+  |> Nx.divide(Nx.sum(exp_x, axes: [1]))
+  |> Nx.transpose()
+end
+
+# the softmax function ensures that the attention weights are always positive.
+# This makes the output interpretable as probabilities or relative importance, 
+# where higher weights indicate greater importance.
+```
+
+```elixir
+attn_score_softmax_tensor = softmax_naive.(attn_scores_tensor)
+```
+
+```elixir
+# To avoid numerical instability problems, such as overflow and underflow, 
+# when dealing with large or small input values.
+Axon.Activations.softmax(attn_scores_tensor)
+```
+
+The final state is calculating the context vector z^(2) by multiplying the embedded
+input tokens, x^(i) , with the corresponding attention weights and then summing the resulting
+vectors
+
+**3.3.2 Computing attention weights for all input tokens**
+
+```elixir
+context_vector = Nx.dot(attn_score_softmax_tensor, inputs)
+```
+
+Self-Attention Steps:
+
+* Compute the attention scores as dot products between the inputs.
+* The attention weights are a normalized version of the attention scores.
+* The context vectors are computed as a weighted sum over the inputs.
