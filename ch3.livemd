@@ -276,3 +276,77 @@ A "query" is analogous to a search query in a database. The query is used to pro
 The "key" is like a database key used for indexing and searching. In the attention mechanism, each item in the input sequence has an associated key. These keys are used to match with the query.
 
 The "value" in this context is similar to the value in a key-value pair in a database. It represents the actual content or representation of the input items. Once the model determines which keys (and thus which parts of the input) are most relevant to the query (the current focus item), it retrieves the corresponding values.
+
+<!-- livebook:{"break_markdown":true} -->
+
+**3.4.2 Implementing a compact self-attention Python class**
+
+```elixir
+defmodule SelfAttentionV1 do
+  import Nx.Defn
+  
+  defn forward(x, w_query, w_key, w_value) do
+    keys = Nx.dot(x, w_key)
+    queries = Nx.dot(x, w_query)
+    values = Nx.dot(x, w_value)
+
+    d_k = Nx.axis_size(keys, -1)
+
+    attn_score =
+      keys
+      |> Nx.transpose()
+      |> then(&Nx.dot(queries, &1))
+
+    attn_weights =
+      attn_score
+      |> Nx.divide(Nx.pow(d_k, 0.5))
+      |> Axon.Activations.softmax(axis: -1)
+
+    Nx.dot(attn_weights, values)
+  end
+end
+```
+
+```elixir
+context_vector = SelfAttentionV1.forward(inputs, w_q, w_k, w_v)
+```
+
+```elixir
+context_vector[1]
+```
+
+In self-attention, we transform the input vectors in the input matrix X with the three weight matrices, Wq, Wk, and Wv. Then, we compute the attention weight matrix based on the resulting queries (Q) and keys (K). Using the attention weights and values (V), we then compute the context vectors (Z).
+
+```elixir
+defmodule SelfAttentionV2 do
+  import Nx.Defn
+  
+  defn forward(x, w_query, w_key, w_value) do
+    keys = Axon.Layers.dense(x, w_key)
+    queries = Axon.Layers.dense(x, w_query)
+    values = Axon.Layers.dense(x, w_value)
+
+    d_k = Nx.axis_size(keys, -1)
+
+    attn_score =
+      keys
+      |> Nx.transpose()
+      |> then(&Nx.dot(queries, &1))
+
+    attn_weights =
+      attn_score
+      |> Nx.divide(Nx.pow(d_k, 0.5))
+      |> Axon.Activations.softmax(axis: -1)
+
+    Nx.dot(attn_weights, values)
+  end
+end
+```
+
+```elixir
+context_vector = SelfAttentionV1.forward(inputs, w_q, w_k, w_v)
+```
+
+The causal aspect involves modifying the attention mechanism to prevent the model from accessing future information in the sequence. In language modeling, where each word prediction should only depend on previous words.
+
+The multi-head component involves splitting the attention mechanism into multiple "heads." Each head learns different aspects of the data, allowing the model to simultaneously attend to information from different representation subspaces at different positions.
