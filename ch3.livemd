@@ -350,3 +350,81 @@ context_vector = SelfAttentionV1.forward(inputs, w_q, w_k, w_v)
 The causal aspect involves modifying the attention mechanism to prevent the model from accessing future information in the sequence. In language modeling, where each word prediction should only depend on previous words.
 
 The multi-head component involves splitting the attention mechanism into multiple "heads." Each head learns different aspects of the data, allowing the model to simultaneously attend to information from different representation subspaces at different positions.
+
+## 3.5 Hiding future words with causal attention
+
+Causal attention, also known as masked attention. It restricts a model to only consider previous and current inputs in a sequence when processing any given token.
+
+**3.5.1 Applying a causal attention mask**
+
+To obtain the masked attention weight matrix in causal attention is to apply the softmax
+function to the attention scores, zeroing out the elements above the diagonal and normalizing the resulting
+matrix.
+
+```elixir
+keys = Nx.dot(inputs, w_k)
+queries = Nx.dot(inputs, w_q)
+
+d_k = Nx.axis_size(keys, -1)
+
+attn_score =
+  keys
+  |> Nx.transpose()
+  |> then(&Nx.dot(queries, &1))
+
+attn_weights =
+  attn_score
+  |> Nx.divide(Nx.pow(d_k, 0.5))
+  |> Axon.Activations.softmax(axis: -1)
+```
+
+```elixir
+mask_simple =
+  attn_weights
+  |> then(&Nx.broadcast(1, &1))
+  |>Nx.tril()
+```
+
+```elixir
+masked = Nx.multiply(attn_weights, mask_simple)
+```
+
+```elixir
+row_sum = Nx.sum(masked, axes: [1]) |> Nx.reshape({6, 1}) |> IO.inspect()
+masked_norm = Nx.divide(masked, row_sum)
+```
+
+**INFORMATION LEAKAGE**
+
+When we renormalize the attention weights after
+masking, what we're essentially doing is recalculating the softmax over a smaller subset (since masked positions don't contribute to the softmax value).
+
+The mathematical elegance of softmax is that despite initially including all positions in the denominator, after masking and renormalizing, the effect of the masked positions is nullified.
+
+There is no information leakage from future.
+
+we can
+take advantage of a mathematical property of the softmax function and implement the
+computation of the masked attention weights more efficiently in fewer steps
+
+The softmax function converts its inputs into a probability distribution. When negative
+infinity values (-∞) are present in a row, the softmax function treats them as zero
+probability. (Mathematically, this is because e -∞ approaches 0.)
+
+```elixir
+simple_mask =
+  attn_weights
+  |> then(&Nx.broadcast(Nx.Constants.infinity(), &1))
+  |>Nx.triu(k: 1)
+```
+
+```elixir
+masked = Nx.multiply(simple_mask, -1) |> Nx.add(attn_score)
+```
+
+```elixir
+attn_weights =
+  masked
+  |> Nx.divide(Nx.pow(d_k, 0.5))
+  |> Axon.Activations.softmax(axis: -1)
+```
