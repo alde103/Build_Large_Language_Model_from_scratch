@@ -198,3 +198,81 @@ Self-Attention Steps:
 * Compute the attention scores as dot products between the inputs.
 * The attention weights are a normalized version of the attention scores.
 * The context vectors are computed as a weighted sum over the inputs.
+
+## 3.4 Implementing self-attention with trainable weights
+
+Self-attention mechanism is also called scaled dot-product attention.
+
+These trainable weight matrices are crucial so that the model
+(specifically, the attention module inside the model) can learn to produce "good" context vectors.
+
+<!-- livebook:{"break_markdown":true} -->
+
+**3.4.1 Computing the attention weights step by step**
+
+We are going to use three weight matrices W_q, W_k, and W_v. These three matrices are used to project the embedded input tokens, x^(i), into query, key, and value vectors.
+
+```elixir
+x = Axon.param("random", {1,2})
+```
+
+```elixir
+x_2 = inputs[1]
+w_q = Nx.tensor([[0.2961, 0.5166],[0.2517, 0.6886],[0.0740, 0.8665]])
+w_k = Nx.tensor([[0.1366, 0.1025],[0.1841, 0.7264],[0.3153, 0.6871]])
+w_v = Nx.tensor([[0.0756, 0.1966],[0.3164, 0.4017],[0.1186, 0.8274]])
+
+{w_q, w_k, w_v, x_2}
+```
+
+```elixir
+query_2 = Nx.dot(x_2, w_q)
+key_2 = Nx.dot(x_2, w_k)
+value_2 = Nx.dot(x_2, w_v)
+```
+
+In summary, weight parameters are the fundamental, learned coefficients that define the network's connections, while attention weights are dynamic, context-specific values.
+
+```elixir
+queries = Nx.dot(inputs, w_q)
+keys = Nx.dot(inputs, w_k)
+values = Nx.dot(inputs, w_v)
+```
+
+```elixir
+attn_score_22 = Nx.dot(keys[1], queries[1])
+```
+
+```elixir
+# All attention scores for given query
+attn_score_2 =
+  keys
+  |> Nx.transpose()
+  |> then(&Nx.dot(queries[1], &1))
+```
+
+That we now scale the attention scores by dividing them by the square root of the embedding dimension of the keys.
+
+```elixir
+d_k = Nx.axis_size(keys, -1)
+attn_weights_2 =
+  attn_score_2
+  |> Nx.divide(Nx.pow(d_k, 0.5))
+  |> Axon.Activations.softmax(axis: -1)
+```
+
+The reason for the normalization by the embedding dimension size is to improve the training performance by avoiding small gradients. The final step is to compute the context vectors.
+
+```elixir
+context_vec_2 = Nx.dot(attn_weights_2, values)
+```
+
+**Why query, key, and value?**
+
+The terms "key," "query," and "value" in the context of attention mechanisms are borrowed from the domain of information retrieval and databases, where similar concepts are used to store, search, and retrieve information.
+
+A "query" is analogous to a search query in a database. The query is used to probe the other parts of the input sequence to determine how much attention to pay to them.
+
+The "key" is like a database key used for indexing and searching. In the attention mechanism, each item in the input sequence has an associated key. These keys are used to match with the query.
+
+The "value" in this context is similar to the value in a key-value pair in a database. It represents the actual content or representation of the input items. Once the model determines which keys (and thus which parts of the input) are most relevant to the query (the current focus item), it retrieves the corresponding values.
