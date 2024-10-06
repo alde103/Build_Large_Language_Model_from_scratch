@@ -428,3 +428,31 @@ attn_weights =
   |> Nx.divide(Nx.pow(d_k, 0.5))
   |> Axon.Activations.softmax(axis: -1)
 ```
+
+**3.5.2 Masking additional attention weights with dropout**
+
+Dropout in deep learning is a technique where randomly selected hidden layer units are ignored during training, effectively "dropping" them out. This method helps prevent overfitting by ensuring that a model does not become overly reliant on any specific set of hidden layer units.
+
+In the attention mechanism, the dropout is typically applied in two specific areas: after calculating the atttention scores or after appling the attention weights to the value vectors.
+
+```elixir
+key = Nx.Random.key(103)
+example = Nx.iota({6,6}, type: :f32) |> Nx.fill(1)
+
+output = Axon.Layers.dropout(example, key, rate: 0.5, mode: :train)
+```
+
+The values of the remaining elements in the matrix are scaled up by a factor of 1/0.5 =2.
+
+This scaling is crucial to maintain the overall balance of the attention weights, ensuring that the average influence of the attention mechanism remains consistent during both the training and inference phases.
+
+```elixir
+dropout = fn(input, key) -> 
+  model = Axon.Layers.dropout(input, key, rate: 0.5, mode: :train) 
+  {model.output, model.state["key"]}
+end
+```
+
+```elixir
+{output, new_key} = dropout.(attn_weights, key)
+```
