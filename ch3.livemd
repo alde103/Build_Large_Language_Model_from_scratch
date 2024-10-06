@@ -456,3 +456,84 @@ end
 ```elixir
 {output, new_key} = dropout.(attn_weights, key)
 ```
+
+**3.5.3 Implementing a compact causal attention class**
+
+```elixir
+batch = Nx.stack([inputs, inputs])
+batch.shape
+```
+
+```elixir
+defmodule Attention do
+  import Nx.Defn
+
+  def causal(%Axon{} = input, opts \\ []) do
+    opts = Keyword.validate!(opts, [:name, :d_in, :d_out])
+    w_query = Axon.param("w_query", fn _ -> {opts[:d_out], opts[:d_in]} end)
+    w_key = Axon.param("w_key", fn _ -> {opts[:d_out], opts[:d_in]} end)
+    w_value = Axon.param("w_value", fn _ -> {opts[:d_out], opts[:d_in]} end)
+
+    Axon.layer(
+      &attention_impl/5,
+      [input, w_query, w_key, w_value],
+      name: opts[:name],
+      op_name: :causal_attention
+    )
+  end
+
+  defnp attention_impl(input, w_query, w_key, w_value, _opts \\ []) do
+    #{b, num_tokens, d_in} = Nx.shape(input)
+    keys = Nx.dot(input, w_key)
+    queries = Nx.dot(input, w_query)
+    values = Nx.dot(input, w_value)
+
+    d_k = Nx.axis_size(keys, -1)
+
+    attn_score =
+      keys
+      |> Nx.transpose()
+      |> then(&Nx.dot(queries, &1))
+
+    simple_mask =
+      attn_score
+      |> then(&Nx.broadcast(Nx.Constants.infinity(), &1))
+      |> Nx.triu(k: 1)
+
+    masked = Nx.multiply(simple_mask, -1) |> Nx.add(attn_score)
+
+    attn_weights =
+      masked
+      |> Nx.divide(Nx.pow(d_k, 0.5))
+      |> Axon.Activations.softmax(axis: -1)
+
+    # context_vector
+    Nx.dot(attn_weights, values)
+  end
+end
+```
+
+```elixir
+model =
+  Axon.input("sequence")
+  |> Attention.causal(d_out: 3, d_in: 2, name: "causal")
+  |> Axon.dropout(rate: 0.5)
+```
+
+```elixir
+{init_fn, predict_fn} = Axon.build(model)
+template = Nx.template({6,3}, :f32)
+params = init_fn.(template, %{})
+```
+
+```elixir
+predict_fn.(params, inputs)
+```
+
+```elixir
+# to visualize the dropout, build the model with mode: :train
+{init_fn, predict_fn} = Axon.build(model, mode: :train)
+template = Nx.template({6,3}, :f32)
+params = init_fn.(template, %{})
+predict_fn.(params, inputs)
+```
