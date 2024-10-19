@@ -470,9 +470,9 @@ defmodule Attention do
 
   def causal(%Axon{} = input, opts \\ []) do
     opts = Keyword.validate!(opts, [:name, :d_in, :d_out])
-    w_query = Axon.param("w_query", fn _ -> {opts[:d_out], opts[:d_in]} end)
-    w_key = Axon.param("w_key", fn _ -> {opts[:d_out], opts[:d_in]} end)
-    w_value = Axon.param("w_value", fn _ -> {opts[:d_out], opts[:d_in]} end)
+    w_query = Axon.param("w_query", fn _ -> {opts[:d_in], opts[:d_out]} end)
+    w_key = Axon.param("w_key", fn _ -> {opts[:d_in], opts[:d_out]} end)
+    w_value = Axon.param("w_value", fn _ -> {opts[:d_in], opts[:d_out]} end)
 
     Axon.layer(
       &attention_impl/5,
@@ -483,7 +483,7 @@ defmodule Attention do
   end
 
   defnp attention_impl(input, w_query, w_key, w_value, _opts \\ []) do
-    #{b, num_tokens, d_in} = Nx.shape(input)
+    # {b, num_tokens, d_in} = Nx.shape(input)
     keys = Nx.dot(input, w_key)
     queries = Nx.dot(input, w_query)
     values = Nx.dot(input, w_value)
@@ -492,8 +492,8 @@ defmodule Attention do
 
     attn_score =
       keys
-      |> Nx.transpose()
-      |> then(&Nx.dot(queries, &1))
+      |> Nx.transpose(axes: [0, 2, 1])
+      |> then(&Nx.dot(queries, [2], [0], &1, [1], [0]))
 
     simple_mask =
       attn_score
@@ -507,33 +507,163 @@ defmodule Attention do
       |> Nx.divide(Nx.pow(d_k, 0.5))
       |> Axon.Activations.softmax(axis: -1)
 
-    # context_vector
-    Nx.dot(attn_weights, values)
+    Nx.dot(attn_weights, [2], [0], values, [1], [0])
   end
 end
 ```
 
 ```elixir
 model =
-  Axon.input("sequence")
-  |> Attention.causal(d_out: 3, d_in: 2, name: "causal")
+  Axon.input("sequence", shape: {nil, 6, 3})
+  |> Attention.causal(d_out: 2, d_in: 3, name: "causal")
   |> Axon.dropout(rate: 0.5)
 ```
 
 ```elixir
 {init_fn, predict_fn} = Axon.build(model)
-template = Nx.template({6,3}, :f32)
+template = Nx.template({1,6,3}, :f32)
 params = init_fn.(template, %{})
 ```
 
 ```elixir
-predict_fn.(params, inputs)
+predict_fn.(params, batch)
 ```
 
 ```elixir
 # to visualize the dropout, build the model with mode: :train
 {init_fn, predict_fn} = Axon.build(model, mode: :train)
-template = Nx.template({6,3}, :f32)
+template = Nx.template({1,6,3}, :f32)
 params = init_fn.(template, %{})
-predict_fn.(params, inputs)
+predict_fn.(params, batch)
+```
+
+## 3.6 Extending single-head attention to multi-head attention
+
+The term "multi-head" refers to dividing the attention mechanism into multiple "heads,"
+each operating independently. In this context, a single causal attention module can be
+considered single-head attention, where there is only one set of attention weights
+processing the input sequentially.
+
+**3.6.1 Stacking multiple single-head attention layers**
+
+In practical terms, implementing multi-head attention involves creating multiple instances of the self-attention mechanism, each with its own weights, and then combining their outputs.
+
+```elixir
+defmodule MultiHeadAttentionWrapper do
+  def multi_head_model(heads_numbers, heads_args \\ []) do
+    for head_index <- 1..heads_numbers do
+      head_args = Enum.at(heads_args, head_index - 1, [])
+      single_head_model(head_args)
+    end
+  end
+
+  def build_heads(models, heads_args \\ []) do
+    for {model, head_index} <- Enum.with_index(models) do
+      head_args = Enum.at(heads_args, head_index - 1, [])
+      build_single_head_model(model, head_args)
+    end
+  end
+
+  def predict(models, input, opts \\ []) do
+    axis = Keyword.get(opts, :axis, 2)
+    predict_tasks = 
+      for {params, _init_fn, predict_fn} <- models do
+        Task.async(fn -> predict_fn.(params, input) end)
+      end
+
+    predict_tasks
+    |> Enum.map(fn predict_task -> Task.await(predict_task) end)
+    |> Nx.concatenate(axis: axis)
+  end
+
+  defp single_head_model(args) do
+    shape = Keyword.get(args, :shape, {nil, 6, 3})
+    d_out = Keyword.get(args, :d_out, 2)
+    d_in = Keyword.get(args, :d_in, 3)
+    dropout_rate = Keyword.get(args, :dropout_rate, 0.5)
+    
+    Axon.input("sequence", shape: shape)
+    |> Attention.causal(d_out: d_out, d_in: d_in, name: "causal")
+    |> Axon.dropout(rate: dropout_rate)
+  end
+
+  defp build_single_head_model(model, args) do
+    shape = Keyword.get(args, :shape, {1,6,3})
+    model_state = Keyword.get(args, :model_state, %{})
+    {init_fn, predict_fn} = Axon.build(model)
+    template = Nx.template(shape, :f32)
+    params = init_fn.(template, model_state)
+    {params, init_fn, predict_fn}
+  end
+end
+```
+
+```elixir
+heads = MultiHeadAttentionWrapper.multi_head_model(2)
+```
+
+```elixir
+models = MultiHeadAttentionWrapper.build_heads(heads)
+```
+
+```elixir
+MultiHeadAttentionWrapper.predict(models, batch)
+```
+
+**3.6.2 Implementing multi-head attention with weight splits**
+
+```elixir
+defmodule MultiHeadAttention do
+  import Nx.Defn
+
+  def causal(%Axon{} = input, opts \\ []) do
+    opts = Keyword.validate!(opts, [:name, :d_in, :d_out, :num_heads])
+    head_dim = div(opts[:d_out], opts[:num_heads])
+    w_query = Axon.param("w_query", fn _ -> {opts[:d_in], opts[:d_out]} end)
+    w_key = Axon.param("w_key", fn _ -> {opts[:d_in], opts[:d_out]} end)
+    w_value = Axon.param("w_value", fn _ -> {opts[:d_in], opts[:d_out]} end)
+
+    Axon.layer(
+      &attention_impl/5,
+      [input, w_query, w_key, w_value, head_dim, num_heads],
+      name: opts[:name],
+      op_name: :causal_attention
+    )
+  end
+
+  defnp attention_impl(input, w_query, w_key, w_value, head_dim, num_heads, _opts \\ []) do
+    {b, num_tokens, d_in} = Nx.shape(input)
+    keys = Nx.dot(input, w_key)
+    queries = Nx.dot(input, w_query)
+    values = Nx.dot(input, w_value)
+
+    d_k = Nx.axis_size(keys, -1)
+
+    attn_score =
+      keys
+      |> Nx.transpose(axes: [0, 2, 1])
+      |> then(&Nx.dot(queries, [2], [0], &1, [1], [0]))
+
+    simple_mask =
+      attn_score
+      |> then(&Nx.broadcast(Nx.Constants.infinity(), &1))
+      |> Nx.triu(k: 1)
+
+    masked = Nx.multiply(simple_mask, -1) |> Nx.add(attn_score)
+
+    attn_weights =
+      masked
+      |> Nx.divide(Nx.pow(d_k, 0.5))
+      |> Axon.Activations.softmax(axis: -1)
+
+    Nx.dot(attn_weights, [2], [0], values, [1], [0])
+  end
+end
+```
+
+```elixir
+model =
+  Axon.input("sequence", shape: {nil, 6, 3})
+  |> MultiHeadAttention.causal(d_out: 2, d_in: 3, name: "causal")
+  |> Axon.dropout(rate: 0.5)
 ```
