@@ -612,9 +612,35 @@ MultiHeadAttentionWrapper.predict(models, batch)
 
 **3.6.2 Implementing multi-head attention with weight splits**
 
+MultiHeadAttention module integrates the multi-head functionality within a single class.
+It splits the input into multiple heads by reshaping the projected query, key, and value
+tensors and then combines the results from these heads after computing attention.
+
 ```elixir
 defmodule MultiHeadAttention do
   import Nx.Defn
+
+
+  def model(args \\ []) do
+    shape = Keyword.get(args, :shape, {nil, 6, 3})
+    d_out = Keyword.get(args, :d_out, 4)
+    d_in = Keyword.get(args, :d_in, 3)
+    num_heads = Keyword.get(args, :num_heads, 2)
+    dropout_rate = Keyword.get(args, :dropout_rate, 0.5)
+    
+    Axon.input("sequence", shape: shape)
+    |> causal(d_out: d_out, d_in: d_in, num_heads: num_heads, name: "causal")
+    |> Axon.dropout(rate: dropout_rate)
+  end
+
+  def build_model(model, args) do
+    shape = Keyword.get(args, :shape, {1,6,3})
+    model_state = Keyword.get(args, :model_state, %{})
+    {init_fn, predict_fn} = Axon.build(model)
+    template = Nx.template(shape, :f32)
+    params = init_fn.(template, model_state)
+    {params, init_fn, predict_fn}
+  end
 
   def causal(%Axon{} = input, opts \\ []) do
     opts = Keyword.validate!(opts, [:name, :d_in, :d_out, :num_heads])
@@ -622,27 +648,47 @@ defmodule MultiHeadAttention do
     w_query = Axon.param("w_query", fn _ -> {opts[:d_in], opts[:d_out]} end)
     w_key = Axon.param("w_key", fn _ -> {opts[:d_in], opts[:d_out]} end)
     w_value = Axon.param("w_value", fn _ -> {opts[:d_in], opts[:d_out]} end)
+    out_proj = Axon.param("out_proj", fn _ -> {opts[:d_out], opts[:d_out]} end)
 
     Axon.layer(
-      &attention_impl/5,
-      [input, w_query, w_key, w_value, head_dim, num_heads],
+      #&attention_impl/7,
+      &attention_impl/6,
+      #[input, w_query, w_key, w_value, head_dim, opts[:num_heads]],
+      [input, w_query, w_key, w_value, out_proj],
       name: opts[:name],
-      op_name: :causal_attention
+      op_name: :causal_attention,
+      head_dim: head_dim,
+      num_heads: opts[:num_heads]
     )
   end
 
-  defnp attention_impl(input, w_query, w_key, w_value, head_dim, num_heads, _opts \\ []) do
-    {b, num_tokens, d_in} = Nx.shape(input)
+  #defnp attention_impl(input, w_query, w_key, w_value, head_dim, num_heads, _opts \\ []) do
+  defnp attention_impl(input, w_query, w_key, w_value, out_proj, opts \\ []) do
+    {b, num_tokens, _d_in} = Nx.shape(input)
     keys = Nx.dot(input, w_key)
     queries = Nx.dot(input, w_query)
     values = Nx.dot(input, w_value)
-
     d_k = Nx.axis_size(keys, -1)
 
-    attn_score =
+    keys_reshaped = 
       keys
-      |> Nx.transpose(axes: [0, 2, 1])
-      |> then(&Nx.dot(queries, [2], [0], &1, [1], [0]))
+      |> Nx.reshape({b, num_tokens, opts[:num_heads], opts[:head_dim]}) 
+      |> Nx.transpose(axes: [0, 2, 1, 3])
+    
+    queries_reshaped = 
+      queries
+      |> Nx.reshape({b, num_tokens, opts[:num_heads], opts[:head_dim]}) 
+      |> Nx.transpose(axes: [0, 2, 1, 3])
+    
+    values_reshaped = 
+      values
+      |> Nx.reshape({b, num_tokens, opts[:num_heads], opts[:head_dim]}) 
+      |> Nx.transpose(axes: [0, 2, 1, 3])
+
+    attn_score =
+      keys_reshaped
+      |> Nx.transpose(axes: [0, 1, 3, 2])
+      |> then(&Nx.dot(queries_reshaped, [3], [0, 1], &1, [2], [0, 1]))
 
     simple_mask =
       attn_score
@@ -655,15 +701,27 @@ defmodule MultiHeadAttention do
       masked
       |> Nx.divide(Nx.pow(d_k, 0.5))
       |> Axon.Activations.softmax(axis: -1)
+    
+    context_vec =
+      attn_weights
+      |> Nx.dot([3], [0, 1], values_reshaped, [2], [0, 1])
+      |> Nx.transpose(axes: [0, 2, 1, 3])
 
-    Nx.dot(attn_weights, [2], [0], values, [1], [0])
+    context_vec
+    |> Nx.reshape({b, num_tokens, opts[:num_heads] * opts[:head_dim]})
+    |> Nx.dot(out_proj)
   end
 end
 ```
 
 ```elixir
-model =
-  Axon.input("sequence", shape: {nil, 6, 3})
-  |> MultiHeadAttention.causal(d_out: 2, d_in: 3, name: "causal")
-  |> Axon.dropout(rate: 0.5)
+model = MultiHeadAttention.model()
+{params, init_fn, predict_fn} = MultiHeadAttention.build_model(model, [])
+result = predict_fn.(params, batch)
+```
+
+```elixir
+model = MultiHeadAttention.model(d_out: 2)
+{params, init_fn, predict_fn} = MultiHeadAttention.build_model(model, [])
+result = predict_fn.(params, batch)
 ```
