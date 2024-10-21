@@ -1,0 +1,180 @@
+# Chapter 4: Implementing a GPT model from scratch to generate text
+
+```elixir
+Mix.install([
+  {:nx, "~> 0.5"},
+  {:exla, "~> 0.5"},
+  {:axon, "~> 0.5"},
+  {:tiktoken, "~> 0.3.2"},
+  {:table_rex, "~> 3.1.1"},
+])
+```
+
+## 4.1 Coding an LLM architecture
+
+LLMs, such as GPT (which stands for generative pretrained transformer), are large deep neural network architectures designed to generate new text one word (or token) at a time.
+
+In the context of deep learning and LLMs like GPT, the term “parameters” refers
+to the trainable weights of the model. These weights are essentially the internal variables of the model that are adjusted and optimized during the training process to
+minimize a specific loss function. This optimization allows the model to learn from
+the training data.
+
+```elixir
+gpt_config_124m = [
+  vocab_size: 50257,
+  context_length: 1024,
+  emb_dim: 768,
+  n_heads: 12,
+  n_layers: 12,
+  drop_rate: 0.1,
+  qkv_bias: false
+]
+```
+
+```elixir
+defmodule DummyGPTModel do
+  def model(config \\ []) do
+    Axon.input("sequence")
+    |> Axon.embedding(config[:vocab_size], config[:emb_dim])
+    |> Axon.embedding(config[:context_length], config[:emb_dim])
+    |> Axon.dropout(rate: config[:drop_rate])
+  end
+end
+```
+
+```elixir
+txt1 = "Every effort moves you"
+txt2 = "Every day holds a"
+
+# gpt2 not supported
+{:ok, ids1} = Tiktoken.encode("gpt-3.5-turbo", txt1, [])
+{:ok, ids2} = Tiktoken.encode("gpt-3.5-turbo", txt2, [])
+
+tensors = Enum.map([ids1, ids2], &Nx.tensor/1)
+Nx.stack(tensors)
+```
+
+```elixir
+batch = Nx.tensor([[6109, 3629, 6100, 345], [6109, 1110, 6622, 257]])
+```
+
+The model outputs, which are commonly referred to as logits.
+
+## 4.2 Normalizing activations with layer normalization
+
+Training deep neural networks with many layers can sometimes prove challenging
+due to problems like vanishing or exploding gradients. These problems lead to unstable training dynamics and make it difficult for the network to effectively adjust its
+weights, which means the learning process struggles to find a set of parameters
+(weights) for the neural network that minimizes the loss function.
+
+```elixir
+key = Nx.Random.key(123)
+Nx.Random.normal(key, shape: {2, 5}) |> IO.inspect()
+
+batch_example =
+  Nx.tensor([
+    [-0.1115, 0.1204, -0.3696, -0.2404, -1.1969],
+    [0.2093, -0.9724, -0.7550, 0.3239, -0.1085]
+  ])
+```
+
+```elixir
+model =
+  Axon.input("input", shape: {nil, 5})
+  |> Axon.dense(6)
+  |> Axon.activation(:relu)
+
+{init_fn, predict_fn} = Axon.build(model)
+template = Nx.template({1, 5}, :f32)
+params = init_fn.(template, %{})
+result = predict_fn.(params, batch_example) 
+```
+
+```elixir
+Nx.mean(result, axes: [-1], keep_axes: true) |> IO.inspect(label: "Variance")
+Nx.variance(result, axes: [-1], keep_axes: true) |> IO.inspect(label: "Variance")
+```
+
+```elixir
+Nx.add(1, Nx.tensor([1,2]))
+```
+
+```elixir
+defmodule TransformerLayers.Norm do
+  import Nx.Defn
+
+  def normalization(%Axon{} = input, opts \\ []) do
+    opts = Keyword.validate!(opts, [:name, :eps, :emb_dim])
+    eps = Keyword.get(opts, :eps, 1.00e-5)
+    scale = Axon.param("scale", {opts[:emb_dim]}, initializer: &ones(&1, type: &2))
+    shift = Axon.param("shift", {opts[:emb_dim]}, initializer: &zeros(&1, type: &2))
+
+    Axon.layer(
+      &normalization_impl/4,
+      [input, scale, shift],
+      name: opts[:name],
+      op_name: :normalization,
+      eps: eps
+    )
+  end
+
+  defp ones(shape, opts) do
+    opts = Keyword.validate!(opts, [:type])
+    Nx.iota(shape, type: opts[:type]) |> Nx.fill(1)
+  end
+
+  defp zeros(shape, opts) do
+    opts = Keyword.validate!(opts, [:type])
+    Nx.iota(shape, type: opts[:type]) |> Nx.fill(0)
+  end
+
+  defnp normalization_impl(input, scale, shift, opts \\ []) do
+    mean = Nx.mean(input, axes: [-1], keep_axes: true)
+    variance = Nx.variance(input, axes: [-1], keep_axes: true)
+    denominator = variance |> Nx.add(opts[:eps]) |> Nx.sqrt()
+
+    input
+    |> Nx.subtract(mean)
+    |> Nx.divide(denominator)
+    |> Nx.multiply(scale)
+    |> Nx.add(shift)
+  end
+end
+```
+
+The variable `eps` is a small constant (epsilon) added to the variance to prevent division by zero
+during normalization. The `scale` and `shift` are two trainable parameters (of the same dimension as the input) that the LLM automatically adjusts during training if it is determined that doing so would improve the model’s performance on its training task. This allows the model to learn appropriate scaling and shifting that best suit the data it is processing.
+
+```elixir
+model =
+  Axon.input("input", shape: {nil, 5})
+  |> Axon.dense(6)
+  |> Axon.activation(:relu)
+  |> TransformerLayers.Norm.normalization(emb_dim: 6, name: "norm")
+
+{init_fn, predict_fn} = Axon.build(model)
+template = Nx.template({1, 5}, :f32)
+params = init_fn.(template, %{})
+result = predict_fn.(params, batch_example) 
+```
+
+```elixir
+Nx.mean(result, axes: [-1], keep_axes: true) |> IO.inspect(label: "Variance")
+Nx.variance(result, axes: [-1], keep_axes: true) |> IO.inspect(label: "Variance")
+```
+
+```elixir
+model =
+  Axon.input("input", shape: {nil, 5})
+  |> TransformerLayers.Norm.normalization(emb_dim: 5, name: "norm")
+
+{init_fn, predict_fn} = Axon.build(model)
+template = Nx.template({1, 5}, :f32)
+params = init_fn.(template, %{})
+result = predict_fn.(params, batch_example) 
+```
+
+```elixir
+Nx.mean(result, axes: [-1], keep_axes: true) |> IO.inspect(label: "Variance")
+Nx.variance(result, axes: [-1], keep_axes: true) |> IO.inspect(label: "Variance")
+```
