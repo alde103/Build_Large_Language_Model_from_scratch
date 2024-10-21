@@ -7,6 +7,7 @@ Mix.install([
   {:axon, "~> 0.5"},
   {:tiktoken, "~> 0.3.2"},
   {:table_rex, "~> 3.1.1"},
+  {:kino_vega_lite, "~> 0.1.11"}
 ])
 ```
 
@@ -178,3 +179,88 @@ result = predict_fn.(params, batch_example)
 Nx.mean(result, axes: [-1], keep_axes: true) |> IO.inspect(label: "Variance")
 Nx.variance(result, axes: [-1], keep_axes: true) |> IO.inspect(label: "Variance")
 ```
+
+## 4.3 Implementing a feed forward networkwith GELU activations
+
+Historically, the ReLU activation function has been commonly used in deep learning
+due to its simplicity and effectiveness across various neural network architectures.
+However, in LLMs, several other activation functions are employed beyond the traditional ReLU. Two notable examples are GELU (Gaussian error linear unit) and SwiGLU
+(Swish-gated linear unit).
+
+GELU and SwiGLU are more complex and smooth activation functions incorporating Gaussian and sigmoid-gated linear units, respectively. They offer improved performance for deep learning models, unlike the simpler ReLU.
+
+The GELU activation function can be implemented in several ways; the exact version is defined as GELU(x) = x⋅Φ(x), where Φ(x) is the cumulative distribution function of the standard Gaussian distribution.
+
+```elixir
+x = Nx.linspace(-3, 3, n: 100) 
+y_gelu = Axon.Activations.gelu(x) |> Nx.to_flat_list
+y_relu = Axon.Activations.relu(x) |> Nx.to_flat_list
+x = Nx.to_flat_list(x)
+```
+
+```elixir
+alias VegaLite, as: Vl
+Vl.new(title: "GeLU vs ReLU", width: 400, height: 400)
+|> Vl.data_from_values(x: x, relu: y_relu, gelu: y_gelu)
+#|> Vl.mark(:line)
+
+|> Vl.layers([
+  Vl.new()
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "relu", type: :quantitative),
+  Vl.new()
+  |> Vl.mark(:line)
+  |> Vl.encode(:color, value: "#db646f")
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "gelu", type: :quantitative)
+])
+```
+
+The smoothness of GELU can lead to better optimization properties during training,
+as it allows for more nuanced adjustments to the model’s parameters. In contrast,
+ReLU has a sharp corner at zero, which can sometimes make opti
+mization harder, especially in networks that are very deep or have complex architec
+tures. Moreover, unlike ReLU, which outputs zero for any negative input, GELU
+allows for a small, non-zero output for negative values. This characteristic means that
+during the training process, neurons that receive negative input can still contribute to
+the learning process, albeit to a lesser extent than positive inputs.
+
+```elixir
+emb_dim = 768
+
+model =
+  Axon.input("sequence", shape: {nil, 3, emb_dim})
+  |> Axon.dense(4*emb_dim)
+  |> Axon.activation(:gelu)
+  |> Axon.dense(emb_dim)
+
+template = Nx.template({2, 3, emb_dim}, :f32)
+Axon.Display.as_graph(model, template)
+```
+
+```elixir
+{init_fn, predict_fn} = Axon.build(model, compiler: EXLA)
+params = init_fn.(template, %{})
+#result = predict_fn.(params, batch_example)
+```
+
+```elixir
+{x, _new_key} = Nx.Random.normal(key, shape: {2,3,768})
+result = predict_fn.(params, x)
+```
+
+```elixir
+Nx.shape(result)
+```
+
+The FeedForward module plays a crucial role in enhancing the model’s ability to learn
+from and generalize the data. Although the input and output dimensions of this
+module are the same, it internally expands the embedding dimension into a higher
+dimensional space through the first linear layer.
+
+This expansion is followed by a nonlinear GELU activation and then a contraction back to the original dimension with the second linear transformation. Such a design allows for the
+exploration of a richer representation space.
+
+shortcut connections that we insert between different layers of a neural network, which are important for improving the training
+performance in deep neural network architectures.
