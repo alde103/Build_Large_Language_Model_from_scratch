@@ -264,3 +264,62 @@ exploration of a richer representation space.
 
 shortcut connections that we insert between different layers of a neural network, which are important for improving the training
 performance in deep neural network architectures.
+
+## 4.4 Adding shortcut connections
+
+The shortcut connections were proposed for deep networks in
+computer vision (specifically, in residual networks) to mitigate the challenge of vanishing gradients. The vanishing gradient problem refers to the issue where gradients
+(which guide weight updates during training) become progressively smaller as they
+propagate backward through the layers, making it difficult to effectively train earlier
+layers.
+
+```elixir
+defmodule LLM.Layer do
+  def shortcut(x, layer_impl, opts \\ []) when is_function(layer_impl) do
+    with {:arity, arity} <- Function.info(layer_impl, :arity),
+          layer_output <- execute_layer(x, layer_impl, opts, arity),
+          output <- shortcut_impl(x, layer_output, opts) do
+      output
+    end    
+  end
+
+  defp execute_layer(x, layer_impl, _opts, 1), do: layer_impl.(x)
+  defp execute_layer(x, layer_impl, opts, _arity), do: layer_impl.(x, opts)
+  defp shortcut_impl(x, layer_output, opts) do
+    use_shortcut? = Keyword.get(opts, :use_shortcut, false)
+    if use_shortcut?, 
+      do: Axon.add(x, layer_output),
+      else: layer_output
+  end
+end
+```
+
+```elixir
+model =
+  Axon.input("input", shape: {nil, 2})
+  #|>Axon.dense(2)
+  |> LLM.Layer.shortcut(&Axon.dense(&1, 2, use_bias: false))
+
+model_with_shortcut =
+  Axon.input("input", shape: {nil, 2})
+  |> LLM.Layer.shortcut(
+    &Axon.dense(&1, 2, use_bias: false),
+    use_shortcut: true
+  )
+{_init_fn, predict_with_short_fn} = Axon.build(model_with_shortcut)
+{init_fn, predict_fn} = Axon.build(model)
+template = Nx.template({1, 2}, :f32)
+
+params = init_fn.(template, %{})
+```
+
+```elixir
+predict_fn.(params, Nx.tensor([[103, 103]]))
+```
+
+```elixir
+predict_with_short_fn.(params, Nx.tensor([[103, 103]]))
+```
+
+In conclusion, shortcut connections are important for overcoming the limitations
+posed by the vanishing gradient problem in deep neural networks. Shortcut connections are a core building block of very large models such as LLMs.
