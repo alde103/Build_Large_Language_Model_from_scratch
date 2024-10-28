@@ -459,6 +459,90 @@ dummy_model =
 ```
 
 ```elixir
+input = Nx.tensor([[1, 2, 4, 5], [4, 3, 2, 9]])
+kernels = Nx.tensor([
+[0.46299999952316284, 0.5562999844551086, 0.18170000612735748],
+[0.9801999926567078, 0.09780000150203705, 0.5333999991416931],
+[0.6980000138282776, 0.9240999817848206, 0.23479999601840973],
+[0.31929999589920044, 0.42250001430511475, 0.7865999937057495],
+[0.5519000291824341, 0.5662999749183655, 0.20559999346733093],
+[0.1898999959230423, 0.9311000108718872, 0.8356000185012817],
+[0.6383000016212463, 0.8794000148773193, 0.5282999873161316],
+[0.9523000121116638, 0.7597000002861023, 0.08250000327825546],
+[0.6622999906539917, 0.02329999953508377, 0.8205999732017517],
+[0.9855999946594238, 0.36419999599456787, 0.5372999906539917]])
+
+Axon.Layers.embedding(Nx.tensor([1,2]), kernels)
+```
+
+```elixir
+defmodule PosEmbedding do
+  import Nx.Defn
+  def pos_embedding(%Axon{} = x, vocab_size, embedding_size, opts \\ []) do
+    opts = Keyword.validate!(opts, [:name, kernel_initializer: :uniform])
+
+    kernel_shape = &Axon.Shape.embedding_kernel(&1, vocab_size, embedding_size)
+
+    kernel = Axon.param("kernel", kernel_shape, initializer: opts[:kernel_initializer])
+
+    Axon.layer(&pos_embedding_impl/3, [x, kernel], name: opts[:name], op_name: :pos_embedding)
+  end
+
+  defnp pos_embedding_impl(x, kernel, _opts \\ []) do
+    {_batch_size, sequence_size} = Nx.shape(x)
+    input = Nx.iota({1, sequence_size})
+    Nx.take(kernel, input, axis: 0)
+  end
+end
+```
+
+```elixir
+input = Axon.input("sequence", shape: {nil, 4})
+model1 = 
+  input
+  |> PosEmbedding.pos_embedding(1024, 768)
+
+{init_fn1, predict_fn1} = Axon.build(model1, compiler: EXLA)
+template = Nx.template({1, 4}, :f32)
+params = init_fn1.(template, %{})
+```
+
+```elixir
+input_batch = [
+    [6109, 3629, 6100, 345],
+    [6109, 1110, 6622, 257]
+  ]
+
+batch = Nx.tensor(input_batch)
+
+result = predict_fn1.(params, batch)
+```
+
+```elixir
+# 4 * 768 = 3072
+Nx.equal(params["pos_embedding_0"]["kernel"][0..3], result[0]) |> Nx.sum()
+
+```
+
+```elixir
+model2 = 
+  input
+  |> Axon.embedding(50257, 768)
+
+{init_fn2, predict_fn2} = Axon.build(model2, compiler: EXLA)
+template = Nx.template({1, 4}, :s64)
+params = init_fn2.(template, %{})
+```
+
+```elixir
+model = Axon.add(model1, model2)
+
+{init_fn, predict_fn} = Axon.build(model, compiler: EXLA)
+template = Nx.template({1, 4}, :s64)
+params = init_fn.(template, %{})
+```
+
+```elixir
 Nx.iota({10}) |> Nx.multiply(-1) 
 ```
 

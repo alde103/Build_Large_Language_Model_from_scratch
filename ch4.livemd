@@ -1039,3 +1039,112 @@ input sequence. This means that while the physical dimensions of the
 sequence (length and feature size) remain unchanged as it passes through the trans-
 former block, the content of each output vector is re-encoded to integrate contextual
 information from across the entire input sequence.
+
+## 4.6 Coding the GPT model
+
+The output from the final transformer block then goes through a final layer normal-
+ization step before reaching the linear output layer. This layer maps the transformer’s
+output to a high-dimensional space (in this case, 50,257 dimensions, corresponding to
+the model’s vocabulary size) to predict the next token in the sequence.
+
+```elixir
+# Test to dynamically layers.
+model =
+  Axon.input("sequence", shape: {1, 2})
+
+new_model =
+  for _i <- 1..3, reduce: model do
+    model_acc ->
+      Axon.dense(model_acc, 6)
+  end
+
+template = Nx.template({1, 2}, :f32)
+Axon.Display.as_graph(new_model, template)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+graph TD;
+186[/"sequence (:input) {1, 2}"/];
+187["dense_0 (:dense) {1, 6}"];
+188["dense_1 (:dense) {1, 6}"];
+189["dense_2 (:dense) {1, 6}"];
+188 --> 189;
+187 --> 188;
+186 --> 187;
+```
+
+```elixir
+# Checking Embedding 
+tok_embeds =
+  Axon.input("sequence", shape: {nil, 4})
+  |> Axon.embedding(50257, 768)
+
+pos_embeds =
+  Axon.input("sequence", shape: {nil})
+  |> Axon.embedding(1024, 768)
+
+{init_fn1, predict_fn} = Axon.build(tok_embeds, compiler: EXLA)
+{init_fn2, predict_fn} = Axon.build(pos_embeds, compiler: EXLA)
+
+tok_template = Nx.template({2,4}, {:s, 64})
+pos_embeds = Nx.template({1}, {:s, 64})
+
+params = init_fn.(template, %{})
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+18:03:46.944 [debug] Axon finished graph traversal in 0.0ms
+
+18:03:46.945 [debug] Axon finished init expression generation in 0.3ms
+
+```
+
+```elixir
+defmodule MyGPT do
+  @gpt_config_124m gpt_config_124m
+  def model(input_shape \\ {2,4,768}, opts \\ @gpt_config_124m) do
+    Axon.input("sequence", shape: input_shape)
+    |> Axon.embedding(opts[:vocab_size], opts[:emb_dim])
+    |> Axon.embedding(opts[:context_length], opts[:emb_dim])
+    |> transformer_blocks(12, opts)
+  end
+
+  def transformer_blocks(input, n_blocks, transformer_opts) do
+    for _n_block <- 1..n_blocks, reduce: input do
+      model_acc ->
+        Transformer.Layers.block(model_acc, transformer_opts)
+    end
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, MyGPT, <<70, 79, 82, 49, 0, 0, 12, ...>>, {:transformer_blocks, 3}}
+```
+
+```elixir
+batch
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[2][4]
+  [
+    [6109, 3629, 6100, 345],
+    [6109, 1110, 6622, 257]
+  ]
+>
+```
+
+```elixir
+
+```
