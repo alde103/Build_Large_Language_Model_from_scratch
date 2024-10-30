@@ -1,0 +1,236 @@
+# Chapter 5: Pretraining on unlabeled data
+
+```elixir
+Mix.install([
+  {:nx, "~> 0.5"},
+  {:exla, "~> 0.5"},
+  {:axon, "~> 0.5"},
+  {:tiktoken, "~> 0.3.2"},
+  {:table_rex, "~> 3.1.1"},
+  {:kino_vega_lite, "~> 0.1.11"}
+])
+```
+
+## Introduction
+
+This section covers:
+
+* Pretraining the LLM.
+* Implementing the training code.
+* Evaluating the performance process.
+* Saving and loading model weights.
+
+In the context of LLMs and other deep learning models, weights refer to the trainable
+parameters that the learning process adjusts. These weights are also known as
+weight parameters or simply parameters.
+
+```elixir
+gpt_config_124m = [
+  vocab_size: 50257,
+  context_length: 1024,
+  emb_dim: 768,
+  n_heads: 12,
+  n_layers: 12,
+  drop_rate: 0.1,
+  qkv_bias: false
+]
+```
+
+```elixir
+defmodule Transformer.Layers do
+  import Nx.Defn
+  
+  def attention(%Axon{} = input, opts \\ []) do
+    #opts = Keyword.validate!(opts, [:name, :d_in, :d_out, :num_heads])
+    head_dim = div(opts[:d_out], opts[:num_heads])
+    w_query = Axon.param("w_query", fn _ -> {opts[:d_in], opts[:d_out]} end)
+    w_key = Axon.param("w_key", fn _ -> {opts[:d_in], opts[:d_out]} end)
+    w_value = Axon.param("w_value", fn _ -> {opts[:d_in], opts[:d_out]} end)
+    out_proj = Axon.param("out_proj", fn _ -> {opts[:d_out], opts[:d_out]} end)
+
+    Axon.layer(
+      &attention_impl/6,
+      [input, w_query, w_key, w_value, out_proj],
+      name: opts[:name],
+      op_name: :causal_attention,
+      head_dim: head_dim,
+      num_heads: opts[:num_heads]
+    )
+  end
+
+  #defnp attention_impl(input, w_query, w_key, w_value, head_dim, num_heads, _opts \\ []) do
+  defnp attention_impl(input, w_query, w_key, w_value, out_proj, opts \\ []) do
+    {b, num_tokens, _d_in} = Nx.shape(input)
+    keys = Nx.dot(input, w_key)
+    queries = Nx.dot(input, w_query)
+    values = Nx.dot(input, w_value)
+    d_k = Nx.axis_size(keys, -1)
+
+    keys_reshaped = 
+      keys
+      |> Nx.reshape({b, num_tokens, opts[:num_heads], opts[:head_dim]}) 
+      |> Nx.transpose(axes: [0, 2, 1, 3])
+    
+    queries_reshaped = 
+      queries
+      |> Nx.reshape({b, num_tokens, opts[:num_heads], opts[:head_dim]}) 
+      |> Nx.transpose(axes: [0, 2, 1, 3])
+    
+    values_reshaped = 
+      values
+      |> Nx.reshape({b, num_tokens, opts[:num_heads], opts[:head_dim]}) 
+      |> Nx.transpose(axes: [0, 2, 1, 3])
+
+    attn_score =
+      keys_reshaped
+      |> Nx.transpose(axes: [0, 1, 3, 2])
+      |> then(&Nx.dot(queries_reshaped, [3], [0, 1], &1, [2], [0, 1]))
+
+    simple_mask =
+      attn_score
+      |> then(&Nx.broadcast(Nx.Constants.infinity(), &1))
+      |> Nx.triu(k: 1)
+
+    masked = Nx.multiply(simple_mask, -1) |> Nx.add(attn_score)
+
+    attn_weights =
+      masked
+      |> Nx.divide(Nx.pow(d_k, 0.5))
+      |> Axon.Activations.softmax(axis: -1)
+    
+    context_vec =
+      attn_weights
+      |> Nx.dot([3], [0, 1], values_reshaped, [2], [0, 1])
+      |> Nx.transpose(axes: [0, 2, 1, 3])
+
+    context_vec
+    |> Nx.reshape({b, num_tokens, opts[:num_heads] * opts[:head_dim]})
+    |> Nx.dot(out_proj)
+  end
+
+  def shortcut(x, layer_impl, opts \\ []) when is_function(layer_impl) do
+    with {:arity, arity} <- Function.info(layer_impl, :arity),
+          layer_output <- execute_layer(x, layer_impl, opts, arity),
+          output <- shortcut_impl(x, layer_output, opts) do
+      output
+    end    
+  end
+
+  defp execute_layer(x, layer_impl, _opts, 1), do: layer_impl.(x)
+  defp execute_layer(x, layer_impl, opts, _arity), do: layer_impl.(x, opts)
+  defp shortcut_impl(x, layer_output, opts) do
+    use_shortcut? = Keyword.get(opts, :use_shortcut, false)
+    if use_shortcut?, 
+      do: Axon.add(x, layer_output),
+      else: layer_output
+  end
+
+  def normalization(%Axon{} = input, opts \\ []) do
+    #opts = Keyword.validate!(opts, [:name, :eps, :emb_dim])
+    eps = Keyword.get(opts, :eps, 1.00e-5)
+    scale = Axon.param("scale", {opts[:emb_dim]}, initializer: &ones(&1, type: &2))
+    shift = Axon.param("shift", {opts[:emb_dim]}, initializer: &zeros(&1, type: &2))
+
+    Axon.layer(
+      &normalization_impl/4,
+      [input, scale, shift],
+      name: opts[:name],
+      op_name: :normalization,
+      eps: eps
+    )
+  end
+
+  defp ones(shape, opts) do
+    opts = Keyword.validate!(opts, [:type])
+    Nx.iota(shape, type: opts[:type]) |> Nx.fill(1)
+  end
+
+  defp zeros(shape, opts) do
+    opts = Keyword.validate!(opts, [:type])
+    Nx.iota(shape, type: opts[:type]) |> Nx.fill(0)
+  end
+
+  defnp normalization_impl(input, scale, shift, opts \\ []) do
+    mean = Nx.mean(input, axes: [-1], keep_axes: true)
+    variance = Nx.variance(input, axes: [-1], keep_axes: true)
+    denominator = variance |> Nx.add(opts[:eps]) |> Nx.sqrt()
+
+    input
+    |> Nx.subtract(mean)
+    |> Nx.divide(denominator)
+    |> Nx.multiply(scale)
+    |> Nx.add(shift)
+  end
+
+  def pos_embedding(%Axon{} = x, vocab_size, embedding_size, opts \\ []) do
+    opts = Keyword.validate!(opts, [:name, kernel_initializer: :uniform])
+
+    kernel_shape = &Axon.Shape.embedding_kernel(&1, vocab_size, embedding_size)
+
+    kernel = Axon.param("kernel", kernel_shape, initializer: opts[:kernel_initializer])
+
+    Axon.layer(&pos_embedding_impl/3, [x, kernel], name: opts[:name], op_name: :pos_embedding)
+  end
+
+  defnp pos_embedding_impl(x, kernel, _opts \\ []) do
+    {_batch_size, sequence_size} = Nx.shape(x)
+    input = Nx.iota({1, sequence_size})
+    Nx.take(kernel, input, axis: 0)
+  end
+
+  def feedforward(input, emb_dim) do
+    input
+    |> Axon.dense(4*emb_dim)
+    |> Axon.activation(:gelu)
+    |> Axon.dense(emb_dim)
+  end
+
+  def feedforward_block(input, opts) do
+    input
+    |> normalization(opts)
+    |> feedforward(opts[:emb_dim])
+    |> Axon.dropout(rate: opts[:drop_rate])
+  end
+
+  def attention_block(input, opts) do
+    input
+    |> normalization(opts)
+    |> attention(d_in: opts[:emb_dim], d_out: opts[:emb_dim], num_heads: opts[:n_heads] )
+    |> Axon.dropout(rate: opts[:drop_rate])
+  end
+
+  def block(input, opts \\ []) do
+    input
+    |> shortcut(&attention_block(&1, opts), use_shortcut: true)
+    |> shortcut(&feedforward_block(&1, opts), use_shortcut: true)
+  end
+end
+```
+
+```elixir
+defmodule MyGPT do
+  @gpt_config_124m gpt_config_124m
+  def model(input_shape \\ {2, 4, 768}, opts \\ @gpt_config_124m) do
+    Axon.input("sequence", shape: input_shape)
+    |> embedding_block(opts)
+    |> Axon.dropout(rate: opts[:drop_rate])
+    |> transformer_blocks(12, opts)
+    |> Transformer.Layers.normalization(opts)
+    |> Axon.dense(opts[:vocab_size], use_bias: false)
+  end
+
+  def embedding_block(input, opts) do
+    token_emb = Axon.embedding(input, opts[:vocab_size], opts[:emb_dim])
+    pos_emb = Transformer.Layers.pos_embedding(input, opts[:context_length], opts[:emb_dim])
+
+    Axon.add(token_emb, pos_emb)
+  end
+
+  def transformer_blocks(input, n_blocks, transformer_opts) do
+    for _n_block <- 1..n_blocks, reduce: input do
+      model_acc ->
+        Transformer.Layers.block(model_acc, transformer_opts)
+    end
+  end
+end
+```
