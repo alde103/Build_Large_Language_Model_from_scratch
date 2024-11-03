@@ -1640,3 +1640,213 @@ perplexity = Nx.exp(loss)
   52547.484375
 >
 ```
+
+**5.1.3 Calculating the training and validation set losses**
+
+```elixir
+path = 
+  "/home/alde/Documents/MyDevelopment/Build_A_Large_Language_Model/the-verdict.txt"
+{:ok, raw_text} = File.read(path)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ "I HAD always thought Jack Gisburn rather a cheap genius--though a good fellow enough--so it was no great surprise to me to hear that, in the height of his glory, he had dropped his painting, married a rich widow, and established himself in a villa on the Riviera. (Though I rather thought it would have been Rome or Florence.)\n\n\"The height of his glory\"--that was what the women called it. I can hear Mrs. Gideon Thwing--his last Chicago sitter--deploring his unaccountable abdication. \"Of course it's going to send the value of my picture 'way up; but I don't think of that, Mr. Rickham--the loss to Arrt is all I think of.\" The word, on Mrs. Thwing's lips, multiplied its _rs_ as though they were reflected in an endless vista of mirrors. And it was not only the Mrs. Thwings who mourned. Had not the exquisite Hermia Croft, at the last Grafton Gallery show, stopped me before Gisburn's \"Moon-dancers\" to say, with tears in her eyes: \"We shall not look upon its like again\"?\n\nWell!--even through the prism of Hermia's tears I felt able to face the fact with equanimity. Poor Jack Gisburn! The women had made him--it was fitting that they should mourn him. Among his own sex fewer regrets were heard, and in his own trade hardly a murmur. Professional jealousy? Perhaps. If it were, the honour of the craft was vindicated by little Claude Nutley, who, in all good faith, brought out in the Burlington a very handsome \"obituary\" on Jack--one of those showy articles stocked with random technicalities that I have heard (I won't say by whom) compared to Gisburn's painting. And so--his resolve being apparently irrevocable--the discussion gradually died out, and, as Mrs. Thwing had predicted, the price of \"Gisburns\" went up.\n\nIt was not till three years later that, in the course of a few weeks' idling on the Riviera, it suddenly occurred to me to wonder why Gisburn had given up his painting. On reflection, it really was a tempting problem. To accuse his wife would have been too easy--his fair sitters had been denied the solace of saying that Mrs. Gisburn had \"dragged him down.\" For Mrs. Gisburn--as such--had not existed till nearly a year after Jack's resolve had been taken. It might be that he had married her--since he liked his ease--because he didn't want to go on painting; but it would have been hard to prove that he had given up his painting because he had married her.\n\nOf course, if she had not dragged him down, she had equally, as Miss Croft contended, failed to \"lift him up\"--she had not led him back to the easel. To put the brush into his hand again--what a vocation for a wife! But Mrs. Gisburn appeared to have disdained it--and I felt it might be interesting to find out why.\n\nThe desultory life of the Riviera lends itself to such purely academic speculations; and having, on my way to Monte Carlo, caught a glimpse of Jack's balustraded terraces between the pines, I had myself borne thither the next day.\n\nI found the couple at tea beneath their palm-trees; and Mrs. Gisburn's welcome was so genial that, in the ensuing weeks, I claimed it frequently. It was not that my hostess was \"interesting\": on that point I could have given Miss Croft the fullest reassurance. It was just because she was _not_ interesting--if I may be pardoned the bull--that I found her so. For Jack, all his life, had been surrounded by interesting women: they had fostered his art, it had been reared in the hot-house of their adulation. And it was therefore instructive to note what effect the \"deadening atmosphere of mediocrity\" (I quote Miss Croft) was having on him.\n\nI have mentioned that Mrs. Gisburn was rich; and it was immediately perceptible that her husband was extracting from this circumstance a delicate but substantial satisfaction. It is, as a rule, the people who scorn money who get most out of it; and Jack's elegant disdain of his wife's big balance enabled him, with an appearance of perfect good-breeding, to transmute it into objects of art and luxury. To the latter, I must add, he remained relatively indifferent; but he was buying Renaissance bronzes and eight" <> ...}
+```
+
+```elixir
+{:ok, ids} = Tiktoken.encode(tokenizer, raw_text)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ [40, 473, 1846, 2744, 3463, 7762, 480, 285, 22464, 4856, 264, 12136, 35201, 313, 4636, 264, 1695,
+  12637, 3403, 313, 708, 433, 574, 912, 2294, 13051, 311, 757, 311, 6865, 430, 11, 304, 279, 2673,
+  315, 813, 27025, 11, 568, 1047, 12504, 813, 19354, 11, 12502, 264, 9257, ...]}
+```
+
+```elixir
+String.length(raw_text) |> IO.inspect(label: "Characters")
+Enum.count(ids) |> IO.inspect(label: "Tokens")
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Characters: 20479
+Tokens: 4943
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+4943
+```
+
+When preparing the data loaders, we split the input text into training and validation set portions. Then we tokenize the text and divide the tokenized text into
+chunks of a user-specified length. Finally, we shuffle the rows and organize the chunked text into batches, which we can use for model training
+
+```elixir
+train_ratio = 0.90
+
+split_index = floor(train_ratio * String.length(raw_text))
+
+{train_data, validation_data} = String.split_at(raw_text, split_index)
+
+String.length(train_data) |> IO.inspect(label: "Train Characters")
+String.length(validation_data) |> IO.inspect(label: "Validation Characters")
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Train Characters: 18431
+Validation Characters: 2048
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+2048
+```
+
+We split the input text into training and validation set portions. Then
+we tokenize the text and divide the tokenized text into
+chunks of a user-specified length. Finally, we shuffle the rows and organize the chunked text into batches, which we can use for model training.
+
+However, in practice, it can also be
+beneficial to train an LLM with variable-length inputs to help the LLM to better generalize across different types of inputs when it is being used.
+
+```elixir
+defmodule MyGPT.Dataset do
+  def build(txt, tokenizer_model, max_length, stride) do
+    {:ok, token_ids} = Tiktoken.encode(tokenizer_model, txt)
+
+    token_ids_tensor = Nx.tensor(token_ids)
+    text_length = length(token_ids)
+
+    linespace =
+      Enum.to_list(0..(length(token_ids) - max_length - 1)) |> Enum.take_every(stride)
+
+    for i <- linespace, reduce: %{input_ids: [], target_ids: []} do
+      %{input_ids: input_ids, target_ids: target_ids} = acc ->
+
+        
+        {input_ids, target_ids} =
+          cond do
+            i + max_length > text_length - 1 ->
+              {input_ids, target_ids}
+
+            i + max_length + 1 > text_length - 1 ->
+              {input_ids, target_ids}
+
+            true ->
+              input_chunk = token_ids_tensor[i..(i + max_length - 1)]
+              target_chunk = token_ids_tensor[(i + 1)..(i + max_length)]
+              {input_ids ++ [input_chunk], target_ids ++ [target_chunk]}
+          end
+
+        %{acc | input_ids: input_ids, target_ids: target_ids}
+    end
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, MyGPT.Dataset, <<70, 79, 82, 49, 0, 0, 12, ...>>, {:build, 4}}
+```
+
+```elixir
+context_length = gpt_config_124m[:context_length]
+train_dataset = MyGPT.Dataset.build(train_data, tokenizer, context_length, context_length)
+validation_dataset = MyGPT.Dataset.build(validation_data, tokenizer, context_length, context_length)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  input_ids: [
+    #Nx.Tensor<
+      s64[256]
+      [361, 6, 29368, 1093, 264, 3838, 315, 7563, 13, 1283, 3287, 956, 21423, 261, 11, 499, 3619, 11, 8009, 4610, 3023, 313, 383, 1120, 11203, 1070, 30666, 10307, 11, 323, 389, 813, 23726, 11, 1555, 279, 18004, 48788, 11, 358, 9508, 311, 6865, 279, 3488, 25, 364, 11787, ...]
+    >,
+    #Nx.Tensor<
+      s64[256]
+      [364, 10655, 6, 555, 1063, 832, 1501, 88, 0, 2468, 1176, 358, 574, 16984, 1364, 8434, 956, 1095, 757, 1022, 313, 438, 520, 856, 289, 1220, 6, 842, 358, 12090, 2895, 58863, 13, 7566, 11, 433, 574, 358, 889, 3940, 2895, 58863, 25, 358, 3309, 18083, 13, ...]
+    >
+  ],
+  target_ids: [
+    #Nx.Tensor<
+      s64[256]
+      [6, 29368, 1093, 264, 3838, 315, 7563, 13, 1283, 3287, 956, 21423, 261, 11, 499, 3619, 11, 8009, 4610, 3023, 313, 383, 1120, 11203, 1070, 30666, 10307, 11, 323, 389, 813, 23726, 11, 1555, 279, 18004, 48788, 11, 358, 9508, 311, 6865, 279, 3488, 25, 364, 11787, ...]
+    >,
+    #Nx.Tensor<
+      s64[256]
+      [10655, 6, 555, 1063, 832, 1501, 88, 0, 2468, 1176, 358, 574, 16984, 1364, 8434, 956, 1095, 757, 1022, 313, 438, 520, 856, 289, 1220, 6, 842, 358, 12090, 2895, 58863, 13, 7566, 11, 433, 574, 358, 889, 3940, 2895, 58863, 25, 358, 3309, 18083, 13, ...]
+    >
+  ]
+}
+```
+
+```elixir
+input_ids = Nx.stack(train_dataset[:input_ids])
+target_ids = Nx.stack(train_dataset[:target_ids])
+
+{input_ids[0], target_ids[0]}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{#Nx.Tensor<
+   s64[256]
+   [40, 473, 1846, 2744, 3463, 7762, 480, 285, 22464, 4856, 264, 12136, 35201, 313, 4636, 264, 1695, 12637, 3403, 313, 708, 433, 574, 912, 2294, 13051, 311, 757, 311, 6865, 430, 11, 304, 279, 2673, 315, 813, 27025, 11, 568, 1047, 12504, 813, 19354, 11, 12502, 264, 9257, 57896, ...]
+ >,
+ #Nx.Tensor<
+   s64[256]
+   [473, 1846, 2744, 3463, 7762, 480, 285, 22464, 4856, 264, 12136, 35201, 313, 4636, 264, 1695, 12637, 3403, 313, 708, 433, 574, 912, 2294, 13051, 311, 757, 311, 6865, 430, 11, 304, 279, 2673, 315, 813, 27025, 11, 568, 1047, 12504, 813, 19354, 11, 12502, 264, 9257, 57896, ...]
+ >}
+```
+
+```elixir
+v_input_ids = Nx.stack(validation_dataset[:input_ids])
+v_target_ids = Nx.stack(validation_dataset[:target_ids])
+
+{v_input_ids[0], v_target_ids[0]}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{#Nx.Tensor<
+   s64[256]
+   [361, 6, 29368, 1093, 264, 3838, 315, 7563, 13, 1283, 3287, 956, 21423, 261, 11, 499, 3619, 11, 8009, 4610, 3023, 313, 383, 1120, 11203, 1070, 30666, 10307, 11, 323, 389, 813, 23726, 11, 1555, 279, 18004, 48788, 11, 358, 9508, 311, 6865, 279, 3488, 25, 364, 11787, 499, ...]
+ >,
+ #Nx.Tensor<
+   s64[256]
+   [6, 29368, 1093, 264, 3838, 315, 7563, 13, 1283, 3287, 956, 21423, 261, 11, 499, 3619, 11, 8009, 4610, 3023, 313, 383, 1120, 11203, 1070, 30666, 10307, 11, 323, 389, 813, 23726, 11, 1555, 279, 18004, 48788, 11, 358, 9508, 311, 6865, 279, 3488, 25, 364, 11787, 499, ...]
+ >}
+```
+
+```elixir
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[2][256]
+  [
+    [6, 29368, 1093, 264, 3838, 315, 7563, 13, 1283, 3287, 956, 21423, 261, 11, 499, 3619, 11, 8009, 4610, 3023, 313, 383, 1120, 11203, 1070, 30666, 10307, 11, 323, 389, 813, 23726, 11, 1555, 279, 18004, 48788, 11, 358, 9508, 311, 6865, 279, 3488, 25, 364, 11787, 499, 2771, 499, ...],
+    ...
+  ]
+>
+```
