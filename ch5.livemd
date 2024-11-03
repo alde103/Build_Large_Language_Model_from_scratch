@@ -232,5 +232,93 @@ defmodule MyGPT do
         Transformer.Layers.block(model_acc, transformer_opts)
     end
   end
+
+  def text_to_token_ids(tokenizer, text) do
+    {:ok, tokens} = Tiktoken.encode(tokenizer, text)
+    {:ok, Nx.tensor(tokens, type: :s64) |> Nx.new_axis(0)}
+  end
+
+  def token_ids_to_text(tokenizer, token_ids) do
+    tokens_ids = Nx.to_flat_list(token_ids)
+    Tiktoken.decode(tokenizer, tokens_ids)
+  end
+
+  def generate_tokens(predict_fn, model_params, input, max_new_token) when is_function(predict_fn) do
+    generate_tokens_impl(predict_fn, model_params, input, max_new_token)
+  end
+
+  def generate_tokens_with_model(model, model_params, input, max_new_token) when model_params == %{} do
+    {init_fn, predict_fn} = Axon.build(model, compiler: EXLA)
+    template = Nx.template(Nx.shape(input), :s64)
+    init_model_params = init_fn.(template, model_params)
+    generate_tokens_impl(predict_fn, init_model_params, input, max_new_token)
+  end
+
+  def generate_tokens_with_model(model, model_params, input, max_new_token) do
+    {_init_fn, predict_fn} = Axon.build(model, compiler: EXLA)
+    generate_tokens_impl(predict_fn, model_params, input, max_new_token)
+  end
+
+  defp generate_tokens_impl(predict_fn, model_params, input, max_new_token) do
+    for _new_token_index <- 1..max_new_token, reduce: input do
+      input_acc ->
+        logit = predict_fn.(model_params, input_acc)
+
+        # Get last element of the vector.
+        predicted_new_token =
+          logit[[.., -1]]
+          |> Axon.Layers.softmax(axis: -1)
+          |> Nx.argmax(axis: -1)
+          |> Nx.new_axis(0)
+
+        Nx.concatenate([input_acc, predicted_new_token], axis: 1)
+    end
+  end
 end
+```
+
+## 5.1 Evaluating generative text models
+
+```elixir
+gpt_config_124m = [
+  vocab_size: 50257,
+  context_length: 256,
+  emb_dim: 768,
+  n_heads: 12,
+  n_layers: 12,
+  drop_rate: 0,
+  qkv_bias: false
+]
+```
+
+```elixir
+model = MyGPT.model()
+{init_fn, predict_fn} = Axon.build(model, compiler: EXLA)
+template = Nx.template({1, 4}, :s64)
+params = init_fn.(template, %{})
+```
+
+**5.1.1 Using GPT to generate text**
+
+Generating text involves encoding text into token IDs that the LLM processes into logit vectors. The
+logit vectors are then converted back into token IDs, detokenized into a text representation.
+
+```elixir
+{:ok, input} = MyGPT.text_to_token_ids("gpt-3.5-turbo", "I know everything")
+```
+
+```elixir
+# Nx data accessing example..
+example = Nx.iota({2,3,4}) |> IO.inspect()
+example[0][0][..]
+example[[0,..,0]]
+```
+
+```elixir
+token_ids = MyGPT.generate_tokens(predict_fn, params, input, 6)
+```
+
+```elixir
+{:ok, text} = MyGPT.token_ids_to_text("gpt-3.5-turbo", token_ids)
+IO.puts(text)
 ```
