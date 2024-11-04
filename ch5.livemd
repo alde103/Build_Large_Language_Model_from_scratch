@@ -3851,7 +3851,8 @@ top_k = 3
 ```elixir
 min_index = Nx.argmin(top_logits)
 neg_inf_tensor = Nx.broadcast(Nx.Constants.neg_infinity(), next_token_logits.shape)
-new_logits = Nx.select(Nx.less(next_token_logits, min_index), neg_inf_tensor, next_token_logits)
+next_token_logits[min_index]
+new_logits = Nx.select(Nx.less(next_token_logits, top_logits[min_index]), neg_inf_tensor, next_token_logits)
 ```
 
 <!-- livebook:{"output":true} -->
@@ -3875,6 +3876,8 @@ topk_probas = Axon.Activations.softmax(new_logits, axis: -1)
   [0.06148479878902435, 0.0, 0.0, 0.5775469541549683, 0.0, 0.0, 0.0, 0.3609682321548462, 0.0]
 >
 ```
+
+**5.3.3 Modifying the text generation function**
 
 ```elixir
 defmodule GPTModel do
@@ -3903,11 +3906,12 @@ defmodule GPTModel do
   end
 
   def text_to_token_ids(tokenizer, texts) when is_list(texts) do
-    token_ids_list = 
+    token_ids_list =
       for text <- texts do
         {:ok, token_ids} = text_to_token_ids(tokenizer, text)
         token_ids
       end
+
     Nx.stack(token_ids_list, axis: 1) |> Nx.squeeze()
   end
 
@@ -3921,23 +3925,54 @@ defmodule GPTModel do
     Tiktoken.decode(tokenizer, tokens_ids)
   end
 
-  def generate_tokens(predict_fn, model_params, input, max_new_token) when is_function(predict_fn) do
-    generate_tokens_impl(predict_fn, model_params, input, max_new_token)
+  def generate_tokens(
+        predict_fn,
+        model_params,
+        input,
+        max_new_token,
+        k \\ 0,
+        temperature \\ 1
+      ) do
+    generate_tokens_impl(predict_fn, model_params, input, max_new_token, k, temperature)
   end
 
-  def generate_tokens_with_model(model, model_params, input, max_new_token) when model_params == %{} do
+  def generate_tokens_with_model(
+        model,
+        model_params,
+        input,
+        max_new_token,
+        k \\ 0,
+        temperature \\ 1
+      )
+
+  def generate_tokens_with_model(
+        model,
+        model_params,
+        input,
+        max_new_token,
+        k,
+        temperature
+      )
+      when model_params == %{} do
     {init_fn, predict_fn} = Axon.build(model, compiler: EXLA)
     template = Nx.template(Nx.shape(input), :s64)
     init_model_params = init_fn.(template, model_params)
-    generate_tokens_impl(predict_fn, init_model_params, input, max_new_token)
+    generate_tokens_impl(predict_fn, init_model_params, input, max_new_token, k, temperature)
   end
 
-  def generate_tokens_with_model(model, model_params, input, max_new_token) do
+  def generate_tokens_with_model(
+        model,
+        model_params,
+        input,
+        max_new_token,
+        k,
+        temperature
+      ) do
     {_init_fn, predict_fn} = Axon.build(model, compiler: EXLA)
-    generate_tokens_impl(predict_fn, model_params, input, max_new_token)
+    generate_tokens_impl(predict_fn, model_params, input, max_new_token, k, temperature)
   end
 
-  defp generate_tokens_impl(predict_fn, model_params, input, max_new_token) do
+  defp generate_tokens_impl(predict_fn, model_params, input, max_new_token, k, temperature) do
     for _new_token_index <- 1..max_new_token, reduce: input do
       input_acc ->
         logit = predict_fn.(model_params, input_acc)
@@ -3945,12 +3980,48 @@ defmodule GPTModel do
         # Get last element of the vector.
         predicted_new_token =
           logit[[.., -1]]
-          |> Axon.Layers.softmax(axis: -1)
-          |> Nx.argmax(axis: -1)
+          |> top_k(k)
+          |> softmax_with_temperature(temperature)
           |> Nx.new_axis(0)
 
         Nx.concatenate([input_acc, predicted_new_token], axis: 1)
     end
+  end
+
+  defp multinomial(probabilities, num_samples, max_random_number \\ 1000) do
+    seed = :rand.uniform(max_random_number)
+
+    key = Nx.Random.key(seed)
+
+    {random_values, _new_key} = Nx.Random.uniform(key, shape: {num_samples})
+
+    cumulative_probs = Nx.cumulative_sum(probabilities, axis: -1) 
+
+    Enum.map(Nx.to_flat_list(random_values), fn value ->
+      Enum.find_index(
+        Nx.to_flat_list(cumulative_probs),
+        fn prob -> prob >= value end
+      )
+    end)
+  end
+
+  defp softmax_with_temperature(logits, temperature) when temperature < 0,
+    do: Axon.Layers.softmax(logits, axis: -1) |> Nx.argmax(axis: -1)
+
+  defp softmax_with_temperature(logits, temperature) when temperature > 0 do
+    scaled_logits = Nx.divide(logits, temperature)
+    Axon.Layers.softmax(scaled_logits, axis: -1)
+    |> multinomial(1)
+    |> Nx.tensor()
+  end
+
+  defp top_k(logits, k) when k == 0, do: logits
+
+  defp top_k(logits, k) do
+    {top_logits, _top_pos} = Nx.top_k(logits, k: k)
+    min_index = Nx.reduce_min(top_logits)
+    neg_inf_tensor = Nx.broadcast(Nx.Constants.neg_infinity(), logits.shape)
+    Nx.select(Nx.less(logits, min_index), neg_inf_tensor, logits)
   end
 end
 ```
@@ -3958,5 +4029,29 @@ end
 <!-- livebook:{"output":true} -->
 
 ```
-{:module, GPTModel, <<70, 79, 82, 49, 0, 0, 25, ...>>, {:generate_tokens_impl, 4}}
+{:module, GPTModel, <<70, 79, 82, 49, 0, 0, 36, ...>>, {:top_k, 2}}
+```
+
+```elixir
+{:ok, input} = GPTModel.text_to_token_ids(tokenizer, "I HAD always ")
+token_ids = GPTModel.generate_tokens(predict_fn, trained_model_state, input, 6, 5, 0.1)
+{:ok, text1} = GPTModel.token_ids_to_text(tokenizer, token_ids)
+token_ids = MyGPT.generate_tokens(predict_fn, trained_model_state, input, 6)
+{:ok, text2} = GPTModel.token_ids_to_text(tokenizer, token_ids)
+
+IO.inspect(text1)
+IO.inspect(text2)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"I HAD always ale, except,ishing's"
+"I HAD always ale, except cheap moment,"
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"I HAD always ale, except cheap moment,"
 ```
