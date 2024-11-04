@@ -3820,6 +3820,62 @@ the behavior of the argmax function. Likewise, a temperature of 5 results in a m
 uniform distribution where other tokens are selected more often. This can add more
 variety to the generated texts but also more often results in nonsensical text.
 
+**5.3.2 Top-k sampling**
+
+Top-k sampling, when combined with probabilistic sampling and temperature scaling, can improve the text generation results. In top-k sampling, we can restrict the
+sampled tokens to the top-k most likely tokens and exclude all other tokens from the
+selection process by masking their probability scores.
+
+Using top-k sampling with k = 3, we focus on the three tokens associated with the highest logits
+and mask out all other tokens with negative infinity ( –inf ) before applying the softmax function. This results
+in a probability distribution with a probability value 0 assigned to all non-top-k tokens.
+
+```elixir
+top_k = 3
+{top_logits, top_pos} = Nx.top_k(next_token_logits, k: top_k)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{#Nx.Tensor<
+   f32[3]
+   [6.75, 6.28000020980835, 4.510000228881836]
+ >,
+ #Nx.Tensor<
+   s64[3]
+   [3, 7, 0]
+ >}
+```
+
+```elixir
+min_index = Nx.argmin(top_logits)
+neg_inf_tensor = Nx.broadcast(Nx.Constants.neg_infinity(), next_token_logits.shape)
+new_logits = Nx.select(Nx.less(next_token_logits, min_index), neg_inf_tensor, next_token_logits)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32[9]
+  [4.510000228881836, -Inf, -Inf, 6.75, -Inf, -Inf, -Inf, 6.28000020980835, -Inf]
+>
+```
+
+```elixir
+topk_probas = Axon.Activations.softmax(new_logits, axis: -1)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32[9]
+  [0.06148479878902435, 0.0, 0.0, 0.5775469541549683, 0.0, 0.0, 0.0, 0.3609682321548462, 0.0]
+>
+```
+
 ```elixir
 defmodule GPTModel do
   @gpt_config_124m gpt_config_124m
