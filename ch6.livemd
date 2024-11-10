@@ -7,9 +7,10 @@ Mix.install([
   {:nx, "~> 0.5"},
   {:exla, "~> 0.5"},
   {:axon, "~> 0.5"},
-  {:tiktoken, "~> 0.3.2"},
   {:table_rex, "~> 3.1.1"},
   {:bumblebee, "~> 0.6.0"},
+  {:explorer, "~> 0.7.1"},
+  {:req, "~> 0.4.5"},
   {:kino_vega_lite, "~> 0.1.11"}
 ])
 
@@ -71,7 +72,7 @@ result = predict_fn.(params, input)
 ```
 #Nx.Tensor<
   f32[1][3][50257]
-  EXLA.Backend<host:0, 0.3387358558.2529296408.123594>
+  EXLA.Backend<host:0, 0.3107310975.1469710359.26986>
   [
     [
       [-39.308448791503906, -39.010066986083984, -41.837467193603516, -41.781246185302734, -40.84248352050781, -40.89142990112305, -38.62623596191406, -40.154056549072266, -38.097896575927734, -41.04249954223633, -40.9429931640625, -36.262168884277344, -37.39033889770508, -36.03800964355469, -38.52249526977539, -40.54604721069336, -39.718971252441406, -39.7431640625, -40.27290344238281, -40.314857482910156, -40.54868698120117, -41.00197219848633, -40.9098014831543, -40.914119720458984, -41.297733306884766, -37.69235610961914, -39.106632232666016, -41.460182189941406, -40.526241302490234, -40.43655014038086, -38.97370147705078, -41.32615661621094, -39.90999984741211, -40.565555572509766, -40.7227897644043, -40.8016471862793, -40.875083923339844, -40.86553955078125, -40.39710998535156, -40.221649169921875, -38.78817367553711, -40.58393096923828, -40.43303298950195, -40.767242431640625, -40.72999572753906, -40.78556442260742, -40.461753845214844, -41.084720611572266, -41.600372314453125, -41.25688552856445, ...],
@@ -181,7 +182,7 @@ GPTModel.generate_text(gpt2_model, params, tokenizer, "I want to", 15)
 <!-- livebook:{"output":true} -->
 
 ```
-"I want to talk to you about that and hang up on you… Because I'm sure"
+"I want to continue with this! You guys play good basketball. I like the way your"
 ```
 
 ## 6.1 Different categories of fine-tuning
@@ -205,3 +206,276 @@ flexibility and interaction quality. Classification fine-tuning is ideal for pro
 While instruction fine-tuning is more versatile, it demands larger datasets and greater
 computational resources to develop models proficient in various tasks. In contrast,
 classification fine-tuning requires less data and compute power, but its use is confined to the specific classes on which the model has been trained.
+
+## 6.2 Preparing the dataset
+
+```elixir
+require Explorer.DataFrame, as: DF
+
+File.cd!(__DIR__)
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+```elixir
+{:ok, data} = File.read("sms+spam+collection/SMSSpamCollection")
+df =
+  data
+  |> DF.load_csv!(delimiter: "\t", header: false) 
+  |> DF.rename(["labels", "text"])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[5278 x 2]
+  labels string ["ham", "ham", "spam", "ham", "ham", ...]
+  text string ["Go until jurong point, crazy.. Available only in bugis n great world la e buffet... Cine there got amore wat...",
+   "Ok lar... Joking wif u oni...",
+   "Free entry in 2 a wkly comp to win FA Cup final tkts 21st May 2005. Text FA to 87121 to receive entry question(std txt rate)T&C's apply 08452810075over18's",
+   "U dun say so early hor... U c already then say...",
+   "Nah I don't think he goes to usf, he lives around here though", ...]
+>
+```
+
+```elixir
+df = DF.distinct(df)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[4907 x 2]
+  labels string ["ham", "ham", "spam", "ham", "ham", ...]
+  text string ["Go until jurong point, crazy.. Available only in bugis n great world la e buffet... Cine there got amore wat...",
+   "Ok lar... Joking wif u oni...",
+   "Free entry in 2 a wkly comp to win FA Cup final tkts 21st May 2005. Text FA to 87121 to receive entry question(std txt rate)T&C's apply 08452810075over18's",
+   "U dun say so early hor... U c already then say...",
+   "Nah I don't think he goes to usf, he lives around here though", ...]
+>
+```
+
+```elixir
+frec = Explorer.Series.frequencies( df["labels"])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[2 x 2]
+  values string ["ham", "spam"]
+  counts integer [4292, 615]
+>
+```
+
+For simplicity, and because we prefer a small dataset (which will facilitate faster fine-tuning of the LLM), to avoid imbalanced dataset, we choose to undersample the dataset to include the same size for every label.
+
+```elixir
+num_spam = frec["counts"][1]
+ham_df = DF.filter(df, labels == "ham")
+spam_df = DF.filter(df, labels == "spam")
+
+#ham_s = Explorer.Series.sample(ham_df, 10)
+ham_df = DF.sample(ham_df, num_spam, seed: 103)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[615 x 2]
+  labels string ["ham", "ham", "ham", "ham", "ham", ...]
+  text string ["No i'm not gonna be able to. || too late notice. || i'll be home in a few weeks anyway. || what are the plans",
+   "But you dint in touch with me.", "Meet after lunch la...", "And several to you sir.",
+   "I am joining today formally.Pls keep praying.will talk later.", ...]
+>
+```
+
+```elixir
+df = DF.concat_rows([ham_df, spam_df]) |> DF.shuffle(seed: 103)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[1230 x 2]
+  labels string ["ham", "spam", "ham", "ham", "spam", ...]
+  text string ["Gokila is talking with you aha:)",
+   "REMINDER FROM O2: To get 2.50 pounds free call credit and details of great offers pls reply 2 this text with your valid name, house no and postcode",
+   "I thk u dun haf 2 hint in e forum already lor... Cos i told ron n darren is going 2 tell shuhui.",
+   "Shopping? Eh ger i toking abt syd leh...Haha",
+   "PRIVATE! Your 2003 Account Statement for shows 800 un-redeemed S.I.M. points. Call 08718738001 Identifier Code: 49557 Expires 26/11/04",
+   ...]
+>
+```
+
+```elixir
+frec = Explorer.Series.frequencies( df["labels"])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[2 x 2]
+  values string ["ham", "spam"]
+  counts integer [615, 615]
+>
+```
+
+```elixir
+dataset = DF.mutate(df, labels: if(labels == "ham", do: 0.0, else: 1.0))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[1230 x 2]
+  labels f64 [0.0, 1.0, 0.0, 0.0, 1.0, ...]
+  text string ["Gokila is talking with you aha:)",
+   "REMINDER FROM O2: To get 2.50 pounds free call credit and details of great offers pls reply 2 this text with your valid name, house no and postcode",
+   "I thk u dun haf 2 hint in e forum already lor... Cos i told ron n darren is going 2 tell shuhui.",
+   "Shopping? Eh ger i toking abt syd leh...Haha",
+   "PRIVATE! Your 2003 Account Statement for shows 800 un-redeemed S.I.M. points. Call 08718738001 Identifier Code: 49557 Expires 26/11/04",
+   ...]
+>
+```
+
+```elixir
+frec = Explorer.Series.frequencies(dataset["labels"])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[2 x 2]
+  values f64 [0.0, 1.0]
+  counts integer [615, 615]
+>
+```
+
+```elixir
+total = Explorer.Series.n_distinct(dataset["text"])
+
+train_size = Float.round(0.7 * total) |> trunc()
+val_size = Float.round(0.1 * total) |> trunc()
+test_size = total - train_size - val_size
+
+# Generate a list of random indexes
+indexes = Enum.shuffle(0..(total - 1))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[339, 104, 194, 691, 509, 697, 517, 774, 833, 818, 955, 666, 188, 65, 1061, 1128, 866, 448, 712,
+ 353, 284, 406, 577, 229, 631, 520, 673, 851, 348, 651, 462, 837, 1223, 617, 765, 700, 911, 66, 342,
+ 727, 39, 569, 1102, 527, 1021, 1052, 926, 351, 1024, 154, ...]
+```
+
+```elixir
+# Separar los índices según el tamaño de cada conjunto
+train_indexes = Enum.slice(indexes, 0, train_size)
+val_indexes = Enum.slice(indexes, train_size, val_size)
+test_indexes = Enum.slice(indexes, train_size + val_size, test_size)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[223, 572, 395, 888, 68, 1065, 1058, 927, 276, 609, 248, 1039, 979, 155, 1205, 36, 764, 131, 596,
+ 1195, 690, 411, 446, 397, 1142, 15, 778, 653, 434, 1004, 525, 988, 545, 253, 605, 99, 1212, 798,
+ 1045, 582, 594, 359, 815, 995, 599, 262, 405, 1213, 875, 270, ...]
+```
+
+```elixir
+# Crear los subsets usando `Explorer.DataFrame.slice/2`
+train_df = Explorer.DataFrame.slice(dataset, train_indexes) |> IO.inspect()
+val_df = Explorer.DataFrame.slice(dataset, val_indexes) |> IO.inspect()
+test_df = Explorer.DataFrame.slice(dataset, test_indexes) |> IO.inspect()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[861 x 2]
+  labels f64 [0.0, 1.0, 0.0, 0.0, 0.0, ...]
+  text string ["Ok..",
+   "U have a secret admirer. REVEAL who thinks U R So special. Call 09065174042. To opt out Reply REVEAL STOP. 1.50 per msg recd. Cust care 07821230901",
+   "Got smaller capacity one? Quite ex...",
+   "Btw regarding that we should really try to see if anyone else can be our 4th guy before we commit to a random dude",
+   "Thinkin about someone is all good. No drugs for that", ...]
+>
+#Explorer.DataFrame<
+  Polars[123 x 2]
+  labels f64 [1.0, 0.0, 0.0, 0.0, 1.0, ...]
+  text string ["Hi babe its Jordan, how r u? Im home from abroad and lonely, text me back if u wanna chat xxSP visionsms.com Text stop to stopCost 150p 08712400603",
+   "HEY MATE! HOWS U HONEY?DID U AVE GOOD HOLIDAY? GIMMI DE GOSS!x",
+   "Then u going ikea str aft dat?",
+   "We know TAJ MAHAL as symbol of love. But the other lesser known facts 1. Mumtaz was Shahjahan's 4th wife, out of his 7 wifes. 2. Shahjahan killed Mumtaz's husband to marry her. 3. Mumtaz died in her  &lt;#&gt; th delivery. 4. He then married Mumtaz's sister. Question arises where the Hell is the LOVE?:-| -The Great Hari-",
+   "SMS. ac Sptv: The New Jersey Devils and the Detroit Red Wings play Ice Hockey. Correct or Incorrect? End? Reply END SPTV",
+   ...]
+>
+#Explorer.DataFrame<
+  Polars[246 x 2]
+  labels f64 [0.0, 0.0, 0.0, 1.0, 1.0, ...]
+  text string ["Gosh that , what a pain. Spose I better come then.",
+   "We confirm eating at esplanade?",
+   "I've been barred from all B and Q stores for life!?This twat in orange dungerees came up to me and asked if I wanted decking? So I got the first punch in!!",
+   "New TEXTBUDDY Chat 2 horny guys in ur area 4 just 25p Free 2 receive Search postcode or at gaytextbuddy.com. TXT ONE name to 89693. 08715500022 rpl Stop 2 cnl",
+   "pdate_Now - Double mins and 1000 txts on Orange tariffs. Latest Motorola, SonyEricsson & Nokia & Bluetooth FREE! Call MobileUpd8 on 08000839402 or call2optout/!YHL",
+   ...]
+>
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Explorer.DataFrame<
+  Polars[246 x 2]
+  labels f64 [0.0, 0.0, 0.0, 1.0, 1.0, ...]
+  text string ["Gosh that , what a pain. Spose I better come then.",
+   "We confirm eating at esplanade?",
+   "I've been barred from all B and Q stores for life!?This twat in orange dungerees came up to me and asked if I wanted decking? So I got the first punch in!!",
+   "New TEXTBUDDY Chat 2 horny guys in ur area 4 just 25p Free 2 receive Search postcode or at gaytextbuddy.com. TXT ONE name to 89693. 08715500022 rpl Stop 2 cnl",
+   "pdate_Now - Double mins and 1000 txts on Orange tariffs. Latest Motorola, SonyEricsson & Nokia & Bluetooth FREE! Call MobileUpd8 on 08000839402 or call2optout/!YHL",
+   ...]
+>
+```
+
+```elixir
+{:ok, train_csv} = DF.dump_csv(train_df)
+{:ok, val_csv} = DF.dump_csv(val_df)
+{:ok, test_csv} = DF.dump_csv(test_df)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ "labels,text\n0.0,\"Gosh that , what a pain. Spose I better come then.\"\n0.0,We confirm eating at esplanade?\n0.0,I've been barred from all B and Q stores for life!?This twat in orange dungerees came up to me and asked if I wanted decking? So I got the first punch in!!\n1.0,New TEXTBUDDY Chat 2 horny guys in ur area 4 just 25p Free 2 receive Search postcode or at gaytextbuddy.com. TXT ONE name to 89693. 08715500022 rpl Stop 2 cnl\n1.0,\"pdate_Now - Double mins and 1000 txts on Orange tariffs. Latest Motorola, SonyEricsson & Nokia & Bluetooth FREE! Call MobileUpd8 on 08000839402 or call2optout/!YHL\"\n1.0,\"Urgent! Please call 09066612661 from your landline, your complimentary 4* Lux Costa Del Sol holiday or £1000 CASH await collection. ppm 150 SAE T&Cs James 28, EH74RR\"\n1.0,\"WIN: We have a winner! Mr. T. Foley won an iPod! More exciting prizes soon, so keep an eye on ur mobile or visit www.win-82050.co.uk\"\n1.0,Do you want a new Video handset? 750 any time any network mins? UNLIMITED TEXT? Camcorder? Reply or Call now 08000930705 for del Sat AM\n0.0,What's up. Do you want me to come online?\n0.0,\"I can't keep going through this. It was never my intention to run you out, but if you choose to do that rather than keep the room clean so *I* don't have to say no to visitors, then maybe that's the best choice. Yes, I wanted you to be embarassed, so maybe you'd feel for once how I feel when i have a friend who wants to drop buy and i have to say no, as happened this morning. I've tried everything. I don't know what else to do.\"\n0.0,So can collect ur laptop?\n1.0,URGENT! We are trying to contact U. Todays draw shows that you have won a £800 prize GUARANTEED. Call 09050003091 from land line. Claim C52. Valid 12hrs only\n0.0,It certainly puts things into perspective when something like this happens\n0.0,Great escape. I fancy the bridge but needs her lager. See you tomo \n1.0,\"FREE2DAY sexy St George's Day pic of Jordan!Txt PIC to 89080 dont miss out, then every wk a saucy celeb!4 more pics c PocketBabe.co.uk 0870241182716 £3/wk\"\n1.0,FROM 88066 LOST £12 HELP\n0.0,U coming 2 pick me?\n1.0,\"Bears Pic Nick, and Tom, Pete and ... Dick. In fact, all types try gay chat with photo upload call 08718730666 (10p/min). 2 stop texts call 08712460324\"\n0.0,Please dont say like that. Hi hi hi\n1.0,Ur cash-balance is currently 500 pounds - to maximize ur cash-in now send GO to 86688 only 150p/msg. CC: 08718720201 PO BOX 114/14 TCR/W1\n1.0,Hi its LUCY Hubby at meetins all day Fri & I will B alone at hotel U fancy cumin over? Pls leave msg 2day 09099726395 Lucy x Calls£1/minMobsmoreLKPOBOX177HP51FL\n0.0,\"He is impossible to argue with and he always treats me like his sub, like he never released me ... Which he did and I will remind him of that if necessary\"\n1.0,07732584351 - Rodger Burns - MSG = We tried to call you re your reply to our sms for a free nokia mobile + free camcorder. Please call now 08000930705 for delivery tomorrow\n1.0,\"Customer service announcement. We recently tried to make a delivery to you but were unable to do so, please call 07090298926 to re-schedule. Ref:9307622\"\n0.0,\"Set a place for me in your heart and not in your mind, as the mind easily forgets but the heart will always remember. Wish you Happy Valentines Day!\"\n1.0,\"We know someone who you know that fancies you. Call 09058097218 to find out who. POBox 6, LS15HB 150p\"\n1.0,\"URGENT! Your mobile No *********** WON a £2,000 Bonus Caller Prize on 02/06/03! This is the 2nd attempt to reach YOU! Call 09066362220 ASAP! BOX97N7QP, 150ppm\"\n0.0,\"Hey, a guy I know is breathing down my neck to get him some bud, anyway you'd be able to get a half track to usf tonight?\"\n1.0,\"FREE RING TONE just text \"\"POLYS\"\" to 87131. Then every week get a new tone. 0870737910216yrs only £1.50/wk.\"\n0.0,Company is very good.environment is terrific and food is really nice:)\n1.0,For the most sparkling shopping breaks from 45 per person; call 0121 2025050 or visit www.shortbreaks.org.uk\n0.0,Bbq this sat at mine from 6ish. Ur welcome 2 come\n1.0,<Forwarded from 21870000>Hi - this is your Mailbox Messaging SMS alert. You have 4 mess" <> ...}
+```
+
+```elixir
+File.write!("sms+spam+collection/train.csv", train_csv)
+File.write!("sms+spam+collection/val.csv", val_csv)
+File.write!("sms+spam+collection/test.csv", test_csv)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
