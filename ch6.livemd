@@ -183,3 +183,25 @@ GPTModel.generate_text(gpt2_model, params, tokenizer, "I want to", 15)
 ```
 "I want to talk to you about that and hang up on you… Because I'm sure"
 ```
+
+## 6.1 Different categories of fine-tuning
+
+The most common ways to fine-tune language models are instruction fine-tuning and
+classification fine-tuning. Instruction fine-tuning involves training a language model on a set of tasks using specific instructions to improve its ability to understand and execute tasks described in natural language prompts.
+
+In classification fine-tuning, the model is trained to recognize a specific set of class labels, such as “spam” and “not spam.”
+
+The key point is that a classification fine-tuned model is restricted to predicting
+classes it has encountered during its training, it is easier to develop a
+specialized model than a generalist model that works well across various tasks.
+
+**Choosing the right approach**
+
+Instruction fine-tuning improves a model’s ability to understand and generate responses
+based on specific user instructions. Instruction fine-tuning is best suited for models
+that need to handle a variety of tasks based on complex user instructions, improving
+flexibility and interaction quality. Classification fine-tuning is ideal for projects requiring precise categorization of data into predefined classes, such as sentiment analysis or spam detection.
+
+While instruction fine-tuning is more versatile, it demands larger datasets and greater
+computational resources to develop models proficient in various tasks. In contrast,
+classification fine-tuning requires less data and compute power, but its use is confined to the specific classes on which the model has been trained.
