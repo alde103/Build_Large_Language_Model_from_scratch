@@ -72,7 +72,7 @@ result = predict_fn.(params, input)
 ```
 #Nx.Tensor<
   f32[1][3][50257]
-  EXLA.Backend<host:0, 0.3107310975.1469710359.26986>
+  EXLA.Backend<host:0, 0.1951132553.17956888.50151>
   [
     [
       [-39.308448791503906, -39.010066986083984, -41.837467193603516, -41.781246185302734, -40.84248352050781, -40.89142990112305, -38.62623596191406, -40.154056549072266, -38.097896575927734, -41.04249954223633, -40.9429931640625, -36.262168884277344, -37.39033889770508, -36.03800964355469, -38.52249526977539, -40.54604721069336, -39.718971252441406, -39.7431640625, -40.27290344238281, -40.314857482910156, -40.54868698120117, -41.00197219848633, -40.9098014831543, -40.914119720458984, -41.297733306884766, -37.69235610961914, -39.106632232666016, -41.460182189941406, -40.526241302490234, -40.43655014038086, -38.97370147705078, -41.32615661621094, -39.90999984741211, -40.565555572509766, -40.7227897644043, -40.8016471862793, -40.875083923339844, -40.86553955078125, -40.39710998535156, -40.221649169921875, -38.78817367553711, -40.58393096923828, -40.43303298950195, -40.767242431640625, -40.72999572753906, -40.78556442260742, -40.461753845214844, -41.084720611572266, -41.600372314453125, -41.25688552856445, ...],
@@ -182,7 +182,7 @@ GPTModel.generate_text(gpt2_model, params, tokenizer, "I want to", 15)
 <!-- livebook:{"output":true} -->
 
 ```
-"I want to continue with this! You guys play good basketball. I like the way your"
+"I want to acquire gifts.\"Page Not Found This week's Puzzle Puzzles appear Thursday,"
 ```
 
 ## 6.1 Different categories of fine-tuning
@@ -224,9 +224,34 @@ File.cd!(__DIR__)
 
 ```elixir
 {:ok, data} = File.read("sms+spam+collection/SMSSpamCollection")
-df =
+String.length(data) |> dbg
+data = String.replace(data, "\"", "\\\"")
+String.length(data) |> dbg
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+477203
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+477550
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+477550
+```
+
+```elixir
+original_df =
   data
-  |> DF.load_csv!(delimiter: "\t", header: false) 
+  |> DF.load_csv!(delimiter: "\t", header: false, eol_delimiter: "\n") 
   |> DF.rename(["labels", "text"])
 ```
 
@@ -234,7 +259,7 @@ df =
 
 ```
 #Explorer.DataFrame<
-  Polars[5278 x 2]
+  Polars[5574 x 2]
   labels string ["ham", "ham", "spam", "ham", "ham", ...]
   text string ["Go until jurong point, crazy.. Available only in bugis n great world la e buffet... Cine there got amore wat...",
    "Ok lar... Joking wif u oni...",
@@ -245,14 +270,15 @@ df =
 ```
 
 ```elixir
-df = DF.distinct(df)
+df = DF.distinct(original_df)
+#df = original_df
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
 #Explorer.DataFrame<
-  Polars[4907 x 2]
+  Polars[5171 x 2]
   labels string ["ham", "ham", "spam", "ham", "ham", ...]
   text string ["Go until jurong point, crazy.. Available only in bugis n great world la e buffet... Cine there got amore wat...",
    "Ok lar... Joking wif u oni...",
@@ -272,7 +298,7 @@ frec = Explorer.Series.frequencies( df["labels"])
 #Explorer.DataFrame<
   Polars[2 x 2]
   values string ["ham", "spam"]
-  counts integer [4292, 615]
+  counts integer [4518, 653]
 >
 ```
 
@@ -291,11 +317,12 @@ ham_df = DF.sample(ham_df, num_spam, seed: 103)
 
 ```
 #Explorer.DataFrame<
-  Polars[615 x 2]
+  Polars[653 x 2]
   labels string ["ham", "ham", "ham", "ham", "ham", ...]
-  text string ["No i'm not gonna be able to. || too late notice. || i'll be home in a few weeks anyway. || what are the plans",
-   "But you dint in touch with me.", "Meet after lunch la...", "And several to you sir.",
-   "I am joining today formally.Pls keep praying.will talk later.", ...]
+  text string ["Nothing. Can...", "But i have to. I like to have love and arrange.",
+   "Goodmorning, today i am late for 1hr.",
+   "Die... I accidentally deleted e msg i suppose 2 put in e sim archive. Haiz... I so sad...",
+   "I remain unconvinced that this isn't an elaborate test of my willpower", ...]
 >
 ```
 
@@ -307,13 +334,12 @@ df = DF.concat_rows([ham_df, spam_df]) |> DF.shuffle(seed: 103)
 
 ```
 #Explorer.DataFrame<
-  Polars[1230 x 2]
-  labels string ["ham", "spam", "ham", "ham", "spam", ...]
-  text string ["Gokila is talking with you aha:)",
-   "REMINDER FROM O2: To get 2.50 pounds free call credit and details of great offers pls reply 2 this text with your valid name, house no and postcode",
-   "I thk u dun haf 2 hint in e forum already lor... Cos i told ron n darren is going 2 tell shuhui.",
-   "Shopping? Eh ger i toking abt syd leh...Haha",
-   "PRIVATE! Your 2003 Account Statement for shows 800 un-redeemed S.I.M. points. Call 08718738001 Identifier Code: 49557 Expires 26/11/04",
+  Polars[1306 x 2]
+  labels string ["ham", "ham", "spam", "ham", "spam", ...]
+  text string ["It means u could not keep ur words.", "Got it..mail panren paru..",
+   "URGENT! Your mobile No *********** WON a £2,000 Bonus Caller Prize on 02/06/03! This is the 2nd attempt to reach YOU! Call 09066362220 ASAP! BOX97N7QP, 150ppm",
+   "Will you be here for food",
+   "U are subscribed to the best Mobile Content Service in the UK for £3 per ten days until you send STOP to 83435. Helpline 08706091795.",
    ...]
 >
 ```
@@ -328,7 +354,7 @@ frec = Explorer.Series.frequencies( df["labels"])
 #Explorer.DataFrame<
   Polars[2 x 2]
   values string ["ham", "spam"]
-  counts integer [615, 615]
+  counts integer [653, 653]
 >
 ```
 
@@ -340,13 +366,12 @@ dataset = DF.mutate(df, labels: if(labels == "ham", do: 0.0, else: 1.0))
 
 ```
 #Explorer.DataFrame<
-  Polars[1230 x 2]
-  labels f64 [0.0, 1.0, 0.0, 0.0, 1.0, ...]
-  text string ["Gokila is talking with you aha:)",
-   "REMINDER FROM O2: To get 2.50 pounds free call credit and details of great offers pls reply 2 this text with your valid name, house no and postcode",
-   "I thk u dun haf 2 hint in e forum already lor... Cos i told ron n darren is going 2 tell shuhui.",
-   "Shopping? Eh ger i toking abt syd leh...Haha",
-   "PRIVATE! Your 2003 Account Statement for shows 800 un-redeemed S.I.M. points. Call 08718738001 Identifier Code: 49557 Expires 26/11/04",
+  Polars[1306 x 2]
+  labels f64 [0.0, 0.0, 1.0, 0.0, 1.0, ...]
+  text string ["It means u could not keep ur words.", "Got it..mail panren paru..",
+   "URGENT! Your mobile No *********** WON a £2,000 Bonus Caller Prize on 02/06/03! This is the 2nd attempt to reach YOU! Call 09066362220 ASAP! BOX97N7QP, 150ppm",
+   "Will you be here for food",
+   "U are subscribed to the best Mobile Content Service in the UK for £3 per ten days until you send STOP to 83435. Helpline 08706091795.",
    ...]
 >
 ```
@@ -361,7 +386,7 @@ frec = Explorer.Series.frequencies(dataset["labels"])
 #Explorer.DataFrame<
   Polars[2 x 2]
   values f64 [0.0, 1.0]
-  counts integer [615, 615]
+  counts integer [653, 653]
 >
 ```
 
@@ -379,9 +404,9 @@ indexes = Enum.shuffle(0..(total - 1))
 <!-- livebook:{"output":true} -->
 
 ```
-[339, 104, 194, 691, 509, 697, 517, 774, 833, 818, 955, 666, 188, 65, 1061, 1128, 866, 448, 712,
- 353, 284, 406, 577, 229, 631, 520, 673, 851, 348, 651, 462, 837, 1223, 617, 765, 700, 911, 66, 342,
- 727, 39, 569, 1102, 527, 1021, 1052, 926, 351, 1024, 154, ...]
+[135, 51, 886, 661, 521, 235, 433, 767, 134, 168, 601, 54, 109, 372, 328, 452, 1066, 646, 510, 1130,
+ 997, 569, 988, 668, 15, 899, 174, 588, 376, 115, 224, 1280, 437, 933, 954, 183, 233, 608, 163,
+ 1028, 1124, 696, 460, 315, 221, 377, 1278, 600, 1165, 401, ...]
 ```
 
 ```elixir
@@ -394,9 +419,9 @@ test_indexes = Enum.slice(indexes, train_size + val_size, test_size)
 <!-- livebook:{"output":true} -->
 
 ```
-[223, 572, 395, 888, 68, 1065, 1058, 927, 276, 609, 248, 1039, 979, 155, 1205, 36, 764, 131, 596,
- 1195, 690, 411, 446, 397, 1142, 15, 778, 653, 434, 1004, 525, 988, 545, 253, 605, 99, 1212, 798,
- 1045, 582, 594, 359, 815, 995, 599, 262, 405, 1213, 875, 270, ...]
+[30, 796, 683, 1135, 757, 98, 1103, 1099, 43, 62, 1160, 274, 1226, 657, 37, 1183, 1021, 870, 141,
+ 41, 1288, 740, 671, 753, 1, 1186, 228, 731, 1235, 992, 977, 730, 788, 1033, 295, 745, 1113, 391,
+ 173, 312, 111, 206, 571, 285, 132, 1078, 299, 649, 640, 1281, ...]
 ```
 
 ```elixir
@@ -410,33 +435,32 @@ test_df = Explorer.DataFrame.slice(dataset, test_indexes) |> IO.inspect()
 
 ```
 #Explorer.DataFrame<
-  Polars[861 x 2]
-  labels f64 [0.0, 1.0, 0.0, 0.0, 0.0, ...]
-  text string ["Ok..",
-   "U have a secret admirer. REVEAL who thinks U R So special. Call 09065174042. To opt out Reply REVEAL STOP. 1.50 per msg recd. Cust care 07821230901",
-   "Got smaller capacity one? Quite ex...",
-   "Btw regarding that we should really try to see if anyone else can be our 4th guy before we commit to a random dude",
-   "Thinkin about someone is all good. No drugs for that", ...]
+  Polars[914 x 2]
+  labels f64 [0.0, 1.0, 1.0, 0.0, 0.0, ...]
+  text string ["You see the requirements please",
+   "REMINDER FROM O2: To get 2.50 pounds free call credit and details of great offers pls reply 2 this text with your valid name, house no and postcode",
+   "Kit Strip - you have been billed 150p. Netcollex Ltd. PO Box 1013 IG11 OJA",
+   "Lol ... I really need to remember to eat when I'm drinking but I do appreciate you keeping me company that night babe *smiles*",
+   "I'm really not up to it still tonight babe", ...]
 >
 #Explorer.DataFrame<
-  Polars[123 x 2]
-  labels f64 [1.0, 0.0, 0.0, 0.0, 1.0, ...]
-  text string ["Hi babe its Jordan, how r u? Im home from abroad and lonely, text me back if u wanna chat xxSP visionsms.com Text stop to stopCost 150p 08712400603",
-   "HEY MATE! HOWS U HONEY?DID U AVE GOOD HOLIDAY? GIMMI DE GOSS!x",
-   "Then u going ikea str aft dat?",
-   "We know TAJ MAHAL as symbol of love. But the other lesser known facts 1. Mumtaz was Shahjahan's 4th wife, out of his 7 wifes. 2. Shahjahan killed Mumtaz's husband to marry her. 3. Mumtaz died in her  &lt;#&gt; th delivery. 4. He then married Mumtaz's sister. Question arises where the Hell is the LOVE?:-| -The Great Hari-",
-   "SMS. ac Sptv: The New Jersey Devils and the Detroit Red Wings play Ice Hockey. Correct or Incorrect? End? Reply END SPTV",
+  Polars[131 x 2]
+  labels f64 [1.0, 0.0, 1.0, 0.0, 1.0, ...]
+  text string ["Talk sexy!! Make new friends or fall in love in the worlds most discreet text dating service. Just text VIP to 83110 and see who you could meet.",
+   "I am taking half day leave bec i am not well",
+   "Call Germany for only 1 pence per minute! Call from a fixed line via access number 0844 861 85 85. No prepayment. Direct access! www.telediscount.co.uk",
+   "HI DARLIN ITS KATE ARE U UP FOR DOIN SOMETHIN TONIGHT? IM GOING TO A PUB CALLED THE SWAN OR SOMETHING WITH MY PARENTS FOR ONE DRINK SO PHONE ME IF U CAN",
+   "Urgent! Please call 09066612661 from your landline, your complimentary 4* Lux Costa Del Sol holiday or £1000 CASH await collection. ppm 150 SAE T&Cs James 28, EH74RR",
    ...]
 >
 #Explorer.DataFrame<
-  Polars[246 x 2]
-  labels f64 [0.0, 0.0, 0.0, 1.0, 1.0, ...]
-  text string ["Gosh that , what a pain. Spose I better come then.",
-   "We confirm eating at esplanade?",
-   "I've been barred from all B and Q stores for life!?This twat in orange dungerees came up to me and asked if I wanted decking? So I got the first punch in!!",
-   "New TEXTBUDDY Chat 2 horny guys in ur area 4 just 25p Free 2 receive Search postcode or at gaytextbuddy.com. TXT ONE name to 89693. 08715500022 rpl Stop 2 cnl",
-   "pdate_Now - Double mins and 1000 txts on Orange tariffs. Latest Motorola, SonyEricsson & Nokia & Bluetooth FREE! Call MobileUpd8 on 08000839402 or call2optout/!YHL",
-   ...]
+  Polars[261 x 2]
+  labels f64 [0.0, 1.0, 1.0, 1.0, 1.0, ...]
+  text string ["Sorry man, accidentally left my phone on silent last night and didn't check it til I got up",
+   "Burger King - Wanna play footy at a top stadium? Get 2 Burger King before 1st Sept and go Large or Super with Coca-Cola and walk out a winner",
+   "sports fans - get the latest sports news str* 2 ur mobile 1 wk FREE PLUS a FREE TONE Txt SPORT ON to 8007 www.getzed.co.uk 0870141701216+ norm 4txt/120p ",
+   "Sppok up ur mob with a Halloween collection of nokia logo&pic message plus a FREE eerie tone, txt CARD SPOOK to 8007",
+   "Ringtone Club: Gr8 new polys direct to your mobile every week !", ...]
 >
 ```
 
@@ -444,14 +468,13 @@ test_df = Explorer.DataFrame.slice(dataset, test_indexes) |> IO.inspect()
 
 ```
 #Explorer.DataFrame<
-  Polars[246 x 2]
-  labels f64 [0.0, 0.0, 0.0, 1.0, 1.0, ...]
-  text string ["Gosh that , what a pain. Spose I better come then.",
-   "We confirm eating at esplanade?",
-   "I've been barred from all B and Q stores for life!?This twat in orange dungerees came up to me and asked if I wanted decking? So I got the first punch in!!",
-   "New TEXTBUDDY Chat 2 horny guys in ur area 4 just 25p Free 2 receive Search postcode or at gaytextbuddy.com. TXT ONE name to 89693. 08715500022 rpl Stop 2 cnl",
-   "pdate_Now - Double mins and 1000 txts on Orange tariffs. Latest Motorola, SonyEricsson & Nokia & Bluetooth FREE! Call MobileUpd8 on 08000839402 or call2optout/!YHL",
-   ...]
+  Polars[261 x 2]
+  labels f64 [0.0, 1.0, 1.0, 1.0, 1.0, ...]
+  text string ["Sorry man, accidentally left my phone on silent last night and didn't check it til I got up",
+   "Burger King - Wanna play footy at a top stadium? Get 2 Burger King before 1st Sept and go Large or Super with Coca-Cola and walk out a winner",
+   "sports fans - get the latest sports news str* 2 ur mobile 1 wk FREE PLUS a FREE TONE Txt SPORT ON to 8007 www.getzed.co.uk 0870141701216+ norm 4txt/120p ",
+   "Sppok up ur mob with a Halloween collection of nokia logo&pic message plus a FREE eerie tone, txt CARD SPOOK to 8007",
+   "Ringtone Club: Gr8 new polys direct to your mobile every week !", ...]
 >
 ```
 
@@ -465,7 +488,7 @@ test_df = Explorer.DataFrame.slice(dataset, test_indexes) |> IO.inspect()
 
 ```
 {:ok,
- "labels,text\n0.0,\"Gosh that , what a pain. Spose I better come then.\"\n0.0,We confirm eating at esplanade?\n0.0,I've been barred from all B and Q stores for life!?This twat in orange dungerees came up to me and asked if I wanted decking? So I got the first punch in!!\n1.0,New TEXTBUDDY Chat 2 horny guys in ur area 4 just 25p Free 2 receive Search postcode or at gaytextbuddy.com. TXT ONE name to 89693. 08715500022 rpl Stop 2 cnl\n1.0,\"pdate_Now - Double mins and 1000 txts on Orange tariffs. Latest Motorola, SonyEricsson & Nokia & Bluetooth FREE! Call MobileUpd8 on 08000839402 or call2optout/!YHL\"\n1.0,\"Urgent! Please call 09066612661 from your landline, your complimentary 4* Lux Costa Del Sol holiday or £1000 CASH await collection. ppm 150 SAE T&Cs James 28, EH74RR\"\n1.0,\"WIN: We have a winner! Mr. T. Foley won an iPod! More exciting prizes soon, so keep an eye on ur mobile or visit www.win-82050.co.uk\"\n1.0,Do you want a new Video handset? 750 any time any network mins? UNLIMITED TEXT? Camcorder? Reply or Call now 08000930705 for del Sat AM\n0.0,What's up. Do you want me to come online?\n0.0,\"I can't keep going through this. It was never my intention to run you out, but if you choose to do that rather than keep the room clean so *I* don't have to say no to visitors, then maybe that's the best choice. Yes, I wanted you to be embarassed, so maybe you'd feel for once how I feel when i have a friend who wants to drop buy and i have to say no, as happened this morning. I've tried everything. I don't know what else to do.\"\n0.0,So can collect ur laptop?\n1.0,URGENT! We are trying to contact U. Todays draw shows that you have won a £800 prize GUARANTEED. Call 09050003091 from land line. Claim C52. Valid 12hrs only\n0.0,It certainly puts things into perspective when something like this happens\n0.0,Great escape. I fancy the bridge but needs her lager. See you tomo \n1.0,\"FREE2DAY sexy St George's Day pic of Jordan!Txt PIC to 89080 dont miss out, then every wk a saucy celeb!4 more pics c PocketBabe.co.uk 0870241182716 £3/wk\"\n1.0,FROM 88066 LOST £12 HELP\n0.0,U coming 2 pick me?\n1.0,\"Bears Pic Nick, and Tom, Pete and ... Dick. In fact, all types try gay chat with photo upload call 08718730666 (10p/min). 2 stop texts call 08712460324\"\n0.0,Please dont say like that. Hi hi hi\n1.0,Ur cash-balance is currently 500 pounds - to maximize ur cash-in now send GO to 86688 only 150p/msg. CC: 08718720201 PO BOX 114/14 TCR/W1\n1.0,Hi its LUCY Hubby at meetins all day Fri & I will B alone at hotel U fancy cumin over? Pls leave msg 2day 09099726395 Lucy x Calls£1/minMobsmoreLKPOBOX177HP51FL\n0.0,\"He is impossible to argue with and he always treats me like his sub, like he never released me ... Which he did and I will remind him of that if necessary\"\n1.0,07732584351 - Rodger Burns - MSG = We tried to call you re your reply to our sms for a free nokia mobile + free camcorder. Please call now 08000930705 for delivery tomorrow\n1.0,\"Customer service announcement. We recently tried to make a delivery to you but were unable to do so, please call 07090298926 to re-schedule. Ref:9307622\"\n0.0,\"Set a place for me in your heart and not in your mind, as the mind easily forgets but the heart will always remember. Wish you Happy Valentines Day!\"\n1.0,\"We know someone who you know that fancies you. Call 09058097218 to find out who. POBox 6, LS15HB 150p\"\n1.0,\"URGENT! Your mobile No *********** WON a £2,000 Bonus Caller Prize on 02/06/03! This is the 2nd attempt to reach YOU! Call 09066362220 ASAP! BOX97N7QP, 150ppm\"\n0.0,\"Hey, a guy I know is breathing down my neck to get him some bud, anyway you'd be able to get a half track to usf tonight?\"\n1.0,\"FREE RING TONE just text \"\"POLYS\"\" to 87131. Then every week get a new tone. 0870737910216yrs only £1.50/wk.\"\n0.0,Company is very good.environment is terrific and food is really nice:)\n1.0,For the most sparkling shopping breaks from 45 per person; call 0121 2025050 or visit www.shortbreaks.org.uk\n0.0,Bbq this sat at mine from 6ish. Ur welcome 2 come\n1.0,<Forwarded from 21870000>Hi - this is your Mailbox Messaging SMS alert. You have 4 mess" <> ...}
+ "labels,text\n0.0,\"Sorry man, accidentally left my phone on silent last night and didn't check it til I got up\"\n1.0,Burger King - Wanna play footy at a top stadium? Get 2 Burger King before 1st Sept and go Large or Super with Coca-Cola and walk out a winner\n1.0,sports fans - get the latest sports news str* 2 ur mobile 1 wk FREE PLUS a FREE TONE Txt SPORT ON to 8007 www.getzed.co.uk 0870141701216+ norm 4txt/120p \n1.0,\"Sppok up ur mob with a Halloween collection of nokia logo&pic message plus a FREE eerie tone, txt CARD SPOOK to 8007\"\n1.0,Ringtone Club: Gr8 new polys direct to your mobile every week !\n0.0,\"Good FRIENDS CaRE for each Other.. CLoSE Friends UNDERSTaND each Other... and TRUE Friends STaY forever beyond words, beyond time. Gud ni8\"\n0.0,K actually can you guys meet me at the sunoco on howard? It should be right on the way\n0.0,\"Alright, we're all set here, text the man\"\n1.0,\"Dear Voucher Holder, 2 claim this weeks offer, at your PC go to http://www.e-tlp.co.uk/expressoffer Ts&Cs apply.2 stop texts txt STOP to 80062.\"\n1.0,Get a FREE mobile video player FREE movie. To collect text GO to 89105. Its free! Extra films can be ordered t's and c's apply. 18 yrs only\n1.0,Reply with your name and address and YOU WILL RECEIVE BY POST a weeks completely free accommodation at various global locations www.phb1.com ph:08700435505150p\n1.0,Todays Voda numbers ending with 7634 are selected to receive a £350 reward. If you have a match please call 08712300220 quoting claim code 7684 standard rates apply.\n1.0,\"As a valued customer, I am pleased to advise you that following recent review of your Mob No. you are awarded with a £1500 Bonus Prize, call 09066364589\"\n1.0,Urgent Ur £500 guaranteed award is still unclaimed! Call 09066368327 NOW closingdate04/09/02 claimcode M39M51 £1.50pmmorefrommobile2Bremoved-MobyPOBox734LS27YF\n1.0,\"Our dating service has been asked 2 contact U by someone shy! CALL 09058091870 NOW all will be revealed. POBox84, M26 3UZ 150p\"\n0.0,How abt making some of the pics bigger?\n1.0,You have won a Nokia 7250i. This is what you get when you win our FREE auction. To take part send Nokia to 86021 now. HG/Suite342/2Lands Row/W1JHL 16+ \n0.0,This girl does not stay in bed. This girl doesn't need recovery time. Id rather pass out while having fun then be cooped up in bed\n1.0,\"tddnewsletter@emc1.co.uk (More games from TheDailyDraw) Dear Helen, Dozens of Free Games - with great prizesWith..\"\n0.0,Then she buying today? Ü no need to c meh...\n0.0,Black shirt n blue jeans... I thk i c ü...\n1.0,Todays Voda numbers ending 1225 are selected to receive a £50award. If you have a match please call 08712300220 quoting claim code 3100 standard rates app \n1.0,YES! The only place in town to meet exciting adult singles is now in the UK. Txt CHAT to 86688 now! 150p/Msg.\n0.0,Still at west coast... Haiz... Ü'll take forever to come back...\n0.0,Got it..mail panren paru..\n0.0,K then 2marrow are you coming to class.\n0.0,\"Fyi I'm taking a quick shower, be at epsilon in like  &lt;#&gt;  min\"\n1.0,You have an important customer service announcement from PREMIER. Call FREEPHONE 0800 542 0578 now!\n0.0,For fear of fainting with the of all that housework you just did? Quick have a cuppa\n0.0,Anything lor but toa payoh got place 2 walk meh...\n1.0,\"all the lastest from Stereophonics, Marley, Dizzee Racal, Libertines and The Strokes! Win Nookii games with Flirt!! Click TheMob WAP Bookmark or text WAP to 82468\"\n0.0,I'm good. Have you registered to vote?\n1.0,Am new 2 club & dont fink we met yet Will B gr8 2 C U Please leave msg 2day wiv ur area 09099726553 reply promised CARLIE x Calls£1/minMobsmore LKPOBOX177HP51FL\n1.0,SMS AUCTION - A BRAND NEW Nokia 7250 is up 4 auction today! Auction is FREE 2 join & take part! Txt NOKIA to 86021 now! HG/Suite342/2Lands Row/W1J6HL\n1.0,Your unique user ID is 1172. For removal send STOP to 87239 customer services 08708034412\n0.0,Okay lor... Will they still let us go a not ah? Coz they will not know until later. We drop our cards into the box right?\n0.0,But you were together so you should be thinkin about him\n1.0,\"Hack Chat. Ge" <> ...}
 ```
 
 ```elixir
@@ -478,4 +501,452 @@ File.write!("sms+spam+collection/test.csv", test_csv)
 
 ```
 :ok
+```
+
+## 6.3 Creating data loaders
+
+Previously, we utilized a sliding window technique to
+generate uniformly sized text chunks, which we then grouped into batches for more
+efficient model training. Each chunk functioned as an individual training instance.
+
+We are now working with a spam dataset that contains text messages of varying lengths. To batch these messages as we did with the text chunks, we have two primary options:
+
+* Truncate all messages to the length of the shortest message in the dataset or batch. This option is computationally cheaper, but it may result in significant information loss if shorter messages are much smaller than the average or longest messages, pot reducing model performance.
+* Pad all messages to the length of the longest message in the dataset or batch.
+
+To implement batching, where all messages are padded to the length of the longest message in the dataset, we add padding tokens to all shorter messages. For this purpose, we use "<|endoftext|>" as a padding token.
+
+Instead of appending the string "<|endoftext|>" to each of the text
+messages directly, we can add the token ID corresponding to "<|endoftext|>"
+
+```elixir
+Bumblebee.Tokenizer.all_special_tokens(tokenizer)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["<|endoftext|>", "<|endoftext|>", "<|endoftext|>"]
+```
+
+```elixir
+Bumblebee.Tokenizer.id_to_token(tokenizer, 50256)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"<|endoftext|>"
+```
+
+```elixir
+Bumblebee.apply_tokenizer(tokenizer, "<|endoftext|>")
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  "attention_mask" => #Nx.Tensor<
+    u32[1][1]
+    EXLA.Backend<host:0, 0.1951132553.17956888.74369>
+    [
+      [1]
+    ]
+  >,
+  "input_ids" => #Nx.Tensor<
+    u32[1][1]
+    EXLA.Backend<host:0, 0.1951132553.17956888.74368>
+    [
+      [50256]
+    ]
+  >,
+  "length" => #Nx.Tensor<
+    s32[1]
+    EXLA.Backend<host:0, 0.1951132553.17956894.43592>
+    [1]
+  >
+}
+```
+
+```elixir
+# Identify the longest sequence
+text_to_length =
+  fn text -> 
+    Bumblebee.apply_tokenizer(tokenizer, text)["input_ids"] |> Nx.size()
+  end
+text_length_series = Explorer.Series.transform(dataset["text"], &text_to_length.(&1))
+Explorer.Series.argmax(text_length_series) |> dbg
+max_length = Explorer.Series.max(text_length_series)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+962
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+204
+```
+
+```elixir
+text_to_length.(dataset["text"][962])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+204
+```
+
+```elixir
+IO.inspect(dataset["text"][962])
+Bumblebee.apply_tokenizer(tokenizer, dataset["text"][962])["input_ids"]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"The last thing i ever wanted to do was hurt you. And i didn't think it would have. You'd laugh, be embarassed, delete the tag and keep going. But as far as i knew, it wasn't even up. The fact that you even felt like i would do it to hurt you shows you really don't know me at all. It was messy wednesday, but it wasn't bad. The problem i have with it is you HAVE the time to clean it, but you choose not to. You skype, you take pictures, you sleep, you want to go out. I don't mind a few things here and there, but when you don't make the bed, when you throw laundry on top of it, when i can't have a friend in the house because i'm embarassed that there's underwear and bras strewn on the bed, pillows on the floor, that's something else. You used to be good about at least making the bed."
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  u32[1][204]
+  EXLA.Backend<host:0, 0.1951132553.17956888.181347>
+  [
+    [464, 938, 1517, 1312, 1683, 2227, 284, 466, 373, 5938, 345, 13, 843, 1312, 1422, 470, 892, 340, 561, 423, 13, 921, 1549, 6487, 11, 307, 4072, 283, 21390, 11, 12233, 262, 7621, 290, 1394, 1016, 13, 887, 355, 1290, 355, 1312, 2993, 11, 340, 2492, 470, 772, 510, 13, ...]
+  ]
+>
+```
+
+```elixir
+Nx.pad(Nx.tensor([[1, 2, 3]]), 0, [{0, 0, 0}, {0, 5, 0}])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s32[1][8]
+  EXLA.Backend<host:0, 0.1951132553.17956888.181362>
+  [
+    [1, 2, 3, 0, 0, 0, 0, 0]
+  ]
+>
+```
+
+```elixir
+defmodule MyGPT.Classifier.Dataset do
+  def build(csv_file, tokenizer, max_length \\ nil, pad_token_id \\ 50256, batch_size \\ 2) do
+    {:ok, data} = File.read(csv_file)
+    df = DF.load_csv!(data)
+    max_length = compute_max_length(df, tokenizer, max_length)
+    df_stream = DF.to_rows_stream(df)
+
+    %{inputs: inputs, labels: labels} =
+      for df_elem <- df_stream, reduce: %{inputs: [], labels: []} do
+        %{inputs: inputs, labels: labels} = acc ->
+          input = 
+            Bumblebee.apply_tokenizer(tokenizer, df_elem["text"]) 
+            |> pad_sample(pad_token_id, max_length)
+          
+          label = Nx.tensor(df_elem["labels"]) |> Nx.new_axis(0)
+          %{acc | inputs: inputs ++ [input], labels: labels ++ [label]}
+      end
+    Stream.zip(inputs, labels)
+    |> Stream.chunk_every(batch_size)
+  end
+
+  def pad_sample(tokenizer_output, pad_token_id, max_length) do
+    input_length = Nx.size(tokenizer_output["input_ids"])
+    length_diff = max_length - input_length
+    
+    input = Nx.pad(tokenizer_output["input_ids"], pad_token_id, [{0, 0, 0}, {0, length_diff, 0}])
+    attention_mask = Nx.pad(tokenizer_output["attention_mask"], 1, [{0, 0, 0}, {0, length_diff, 0}])
+    length = Nx.add(tokenizer_output["length"], length_diff)
+    
+    %{"input_ids" => input, "attention_mask" => attention_mask, "length" => length}
+  end
+
+  defp compute_max_length(df, tokenizer, nil) do
+    text_length_series = Explorer.Series.transform(df["text"], &text_to_length(tokenizer, &1))
+    Explorer.Series.max(text_length_series) + 1
+  end 
+  defp compute_max_length(_df, _tokenizer, max_length), do: max_length + 1
+
+  defp text_to_length(tokenizer, text) do
+    tokenizer
+    |> Bumblebee.apply_tokenizer(text)
+    |> Map.fetch!("input_ids")
+    |> Nx.size()
+  end
+end
+
+alias MyGPT.Classifier
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+MyGPT.Classifier
+```
+
+```elixir
+training_dataset = Classifier.Dataset.build("sms+spam+collection/train.csv", tokenizer, 204, 50256, 8)
+validation_dataset = Classifier.Dataset.build("sms+spam+collection/val.csv", tokenizer, 204, 50256, 8)
+test_dataset = Classifier.Dataset.build("sms+spam+collection/test.csv", tokenizer, 204, 50256, 8)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Stream<[
+  enum: #Function<74.53678557/2 in Stream.zip_with/3>,
+  funs: [#Function<3.53678557/1 in Stream.chunk_while/4>]
+]>
+```
+
+```elixir
+Enum.at(validation_dataset, 5)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  {%{
+     "attention_mask" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1364>
+       [
+         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
+       ]
+     >,
+     "input_ids" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1363>
+       [
+         [5211, 345, 1683, 4003, 326, 618, 345, 821, 5059, 11, 2687, 1016, 13611, 621, 345, 318, 281, 22324, 290, 2506, 5059, 5443, 621, 345, 318, 257, 45575, 30, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+       ]
+     >,
+     "length" => #Nx.Tensor<
+       s32[1]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1365>
+       [205]
+     >
+   },
+   #Nx.Tensor<
+     f32[1]
+     EXLA.Backend<host:0, 0.1951132553.18219032.1366>
+     [1.0]
+   >},
+  {%{
+     "attention_mask" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1371>
+       [
+         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
+       ]
+     >,
+     "input_ids" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1370>
+       [
+         [1639, 389, 852, 11237, 416, 674, 43528, 4809, 416, 2130, 345, 760, 0, 1675, 1064, 503, 508, 340, 318, 11, 869, 422, 534, 5175, 393, 1956, 1370, 657, 3829, 2414, 29326, 22515, 7695, 14253, 2425, 11163, 8035, 22, 220, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+       ]
+     >,
+     "length" => #Nx.Tensor<
+       s32[1]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1372>
+       [205]
+     >
+   },
+   #Nx.Tensor<
+     f32[1]
+     EXLA.Backend<host:0, 0.1951132553.18219032.1373>
+     [1.0]
+   >},
+  {%{
+     "attention_mask" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1378>
+       [
+         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
+       ]
+     >,
+     "input_ids" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1377>
+       [
+         [1212, 3275, 318, 1479, 13, 19134, 284, 262, 649, 1222, 6596, 14419, 1222, 8532, 2667, 3430, 0, 1675, 32793, 12522, 422, 428, 2139, 10971, 44934, 13, 13845, 14542, 31, 8628, 79, 1248, 10, 8807, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+       ]
+     >,
+     "length" => #Nx.Tensor<
+       s32[1]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1379>
+       [205]
+     >
+   },
+   #Nx.Tensor<
+     f32[1]
+     EXLA.Backend<host:0, 0.1951132553.18219032.1380>
+     [1.0]
+   >},
+  {%{
+     "attention_mask" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1385>
+       [
+         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
+       ]
+     >,
+     "input_ids" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1384>
+       [
+         [43145, 17066, 25097, 42350, 25, 1675, 779, 534, 3884, 11, 3904, 262, 370, 2969, 2792, 287, 262, 1306, 256, 742, 3275, 393, 3904, 994, 4211, 2638, 1378, 86, 499, 13, 2124, 5324, 24896, 41364, 18664, 13, 785, 30, 77, 28, 48, 41, 42, ...]
+       ]
+     >,
+     "length" => #Nx.Tensor<
+       s32[1]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1386>
+       [205]
+     >
+   },
+   #Nx.Tensor<
+     f32[1]
+     EXLA.Backend<host:0, 0.1951132553.18219032.1387>
+     [1.0]
+   >},
+  {%{
+     "attention_mask" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1392>
+       [
+         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
+       ]
+     >,
+     "input_ids" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1391>
+       [
+         [31337, 534, 26173, 3525, 8881, 6, 50, 5041, 284, 29463, 1797, 753, 13365, 1222, 12696, 1343, 4248, 2167, 15895, 11462, 0, 8255, 25, 29463, 1797, 284, 1400, 25, 718, 6420, 486, 13, 7324, 13, 17034, 69, 13, 82, 746, 455, 278, 13, ...]
+       ]
+     >,
+     "length" => #Nx.Tensor<
+       s32[1]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1393>
+       [205]
+     >
+   },
+   #Nx.Tensor<
+     f32[1]
+     EXLA.Backend<host:0, 0.1951132553.18219032.1394>
+     [1.0]
+   >},
+  {%{
+     "attention_mask" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1399>
+       [
+         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
+       ]
+     >,
+     "input_ids" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1398>
+       [
+         [31948, 306, 9206, 329, 266, 499, 13, 7251, 13396, 13, 785, 318, 5014, 1558, 5705, 13, 5765, 534, 266, 499, 3072, 407, 4217, 13, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+       ]
+     >,
+     "length" => #Nx.Tensor<
+       s32[1]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1400>
+       [205]
+     >
+   },
+   #Nx.Tensor<
+     f32[1]
+     EXLA.Backend<host:0, 0.1951132553.18219032.1401>
+     [1.0]
+   >},
+  {%{
+     "attention_mask" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1406>
+       [
+         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
+       ]
+     >,
+     "input_ids" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1405>
+       [
+         [2396, 8781, 787, 340, 264, 3658, 393, 285, 3204, 355, 583, 15607, 13, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+       ]
+     >,
+     "length" => #Nx.Tensor<
+       s32[1]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1407>
+       [205]
+     >
+   },
+   #Nx.Tensor<
+     f32[1]
+     EXLA.Backend<host:0, 0.1951132553.18219032.1408>
+     [0.0]
+   >},
+  {%{
+     "attention_mask" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1413>
+       [
+         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
+       ]
+     >,
+     "input_ids" => #Nx.Tensor<
+       u32[1][205]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1412>
+       [
+         [4261, 38, 3525, 0, 3406, 12173, 1271, 468, 587, 11343, 351, 257, 4248, 11024, 11596, 19348, 1503, 8643, 41841, 13, 4889, 7769, 3312, 21738, 486, 2481, 422, 1956, 1627, 13, 22070, 1542, 1270, 13, 48951, 1105, 71, 3808, 691, ...]
+       ]
+     >,
+     "length" => #Nx.Tensor<
+       s32[1]
+       EXLA.Backend<host:0, 0.1951132553.18219032.1414>
+       [205]
+     >
+   },
+   #Nx.Tensor<
+     f32[1]
+     EXLA.Backend<host:0, 0.1951132553.18219032.1415>
+     [1.0]
+   >}
+]
+```
+
+```elixir
+Enum.count(training_dataset) |> IO.inspect(label: "training batches")
+Enum.count(validation_dataset) |> IO.inspect(label: "validation batches")
+Enum.count(test_dataset) |> IO.inspect(label: "test batches")
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+training batches: 115
+validation batches: 17
+test batches: 33
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+33
 ```
