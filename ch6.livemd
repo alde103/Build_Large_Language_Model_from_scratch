@@ -950,3 +950,53 @@ test batches: 33
 ```
 33
 ```
+
+## 6.4 Initializing a model with pretrained weights
+
+We must prepare the model for classification fine-tuning to identify spam messages. To begin the model preparation process, we employ the same configurations we used to pretrain unlabeled data.
+
+```elixir
+input_text = "Every effort moves you forward"
+GPTModel.generate_text(gpt2_model, params, tokenizer, input_text, 15) |> IO.puts
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Every effort moves you forward, but you all put it to work. Do you see yourself? Are
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+```elixir
+# Check if the model can classify by default:
+
+input_text = """
+Is the following text 'spam'? Answer with 'yes' or 'no':
+'You are a winner you have been specially
+selected to receive $1000 cash or a $2000 award.'
+"""
+GPTModel.generate_text(gpt2_model, params, tokenizer, input_text, 15) |> IO.puts
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Is the following text 'spam'? Answer with 'yes' or 'no':
+'You are a winner you have been specially
+selected to receive $1000 cash or a $2000 award.'
+Commenting on the tradition of violating a code of conduct, Pantey notes
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+The model is struggling to follow instructions. This result is expected, as it has only undergone pretraining and lacks instruction
+fine-tuning. So, let’s prepare the model for classification fine-tuning.
