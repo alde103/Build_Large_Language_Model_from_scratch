@@ -72,7 +72,7 @@ result = predict_fn.(params, input)
 ```
 #Nx.Tensor<
   f32[1][3][50257]
-  EXLA.Backend<host:0, 0.1354661623.2442002456.7843>
+  EXLA.Backend<host:0, 0.3156742617.1058668568.51501>
   [
     [
       [-39.308448791503906, -39.010066986083984, -41.837467193603516, -41.781246185302734, -40.84248352050781, -40.89142990112305, -38.62623596191406, -40.154056549072266, -38.097896575927734, -41.04249954223633, -40.9429931640625, -36.262168884277344, -37.39033889770508, -36.03800964355469, -38.52249526977539, -40.54604721069336, -39.718971252441406, -39.7431640625, -40.27290344238281, -40.314857482910156, -40.54868698120117, -41.00197219848633, -40.9098014831543, -40.914119720458984, -41.297733306884766, -37.69235610961914, -39.106632232666016, -41.460182189941406, -40.526241302490234, -40.43655014038086, -38.97370147705078, -41.32615661621094, -39.90999984741211, -40.565555572509766, -40.7227897644043, -40.8016471862793, -40.875083923339844, -40.86553955078125, -40.39710998535156, -40.221649169921875, -38.78817367553711, -40.58393096923828, -40.43303298950195, -40.767242431640625, -40.72999572753906, -40.78556442260742, -40.461753845214844, -41.084720611572266, -41.600372314453125, -41.25688552856445, ...],
@@ -182,7 +182,7 @@ GPTModel.generate_text(gpt2_model, params, tokenizer, "I want to", 15)
 <!-- livebook:{"output":true} -->
 
 ```
-"I want to get bulletproof and dressin', packed a couple of coats in a soft"
+"I want to be in A-League play and definitely to see how that goes,\" he"
 ```
 
 ## 6.1 Different categories of fine-tuning
@@ -404,9 +404,9 @@ indexes = Enum.shuffle(0..(total - 1))
 <!-- livebook:{"output":true} -->
 
 ```
-[869, 1120, 137, 870, 845, 239, 961, 709, 1147, 421, 290, 1168, 278, 417, 1201, 467, 399, 374, 624,
- 543, 446, 838, 266, 504, 1229, 896, 549, 967, 553, 947, 325, 1142, 1135, 4, 310, 474, 284, 1187,
- 1251, 366, 98, 115, 214, 312, 1190, 108, 876, 391, 256, 1034, ...]
+[1097, 906, 1014, 255, 353, 151, 545, 42, 1252, 883, 1050, 1287, 826, 670, 1264, 667, 810, 977,
+ 1185, 1165, 877, 625, 107, 574, 863, 719, 1163, 512, 960, 292, 605, 566, 37, 753, 1221, 1236, 690,
+ 1164, 1111, 1054, 383, 1162, 981, 281, 112, 520, 1200, 1098, 1245, 991, ...]
 ```
 
 ```elixir
@@ -419,9 +419,9 @@ test_indexes = Enum.slice(indexes, train_size + val_size, test_size)
 <!-- livebook:{"output":true} -->
 
 ```
-[1276, 1009, 143, 528, 220, 894, 404, 1292, 511, 963, 775, 415, 632, 307, 659, 152, 1151, 783, 1222,
- 1006, 890, 483, 331, 1105, 38, 1185, 635, 989, 670, 686, 515, 327, 688, 43, 841, 1035, 594, 419,
- 662, 250, 812, 136, 1066, 50, 206, 381, 473, 724, 22, 27, ...]
+[1092, 857, 38, 1183, 143, 503, 872, 224, 521, 1134, 1013, 1197, 554, 1055, 612, 268, 601, 886, 832,
+ 447, 626, 1020, 274, 1215, 551, 1207, 493, 943, 431, 1297, 189, 1125, 776, 1079, 232, 54, 184, 600,
+ 752, 1057, 443, 1249, 1213, 327, 1177, 1001, 623, 613, 945, 445, ...]
 ```
 
 ```elixir
@@ -436,31 +436,31 @@ test_df = Explorer.DataFrame.slice(dataset, test_indexes) |> IO.inspect()
 ```
 #Explorer.DataFrame<
   Polars[914 x 2]
-  labels f64 [1.0, 1.0, 1.0, 0.0, 0.0, ...]
-  text string ["Please CALL 08712402779 immediately as there is an urgent message waiting for you",
-   "FreeMsg: Txt: CALL to No: 86888 & claim your reward of 3 hours talk time to use from your phone now! Subscribe6GBP/mnth inc 3hrs 16 stop?txtStop",
-   "Phony £350 award - Todays Voda numbers ending XXXX are selected to receive a £350 award. If you have a match please call 08712300220 quoting claim code 3100 standard rates app",
-   "This girl does not stay in bed. This girl doesn't need recovery time. Id rather pass out while having fun then be cooped up in bed",
-   "When you are big..| God will bring success.", ...]
+  labels f64 [1.0, 0.0, 0.0, 0.0, 0.0, ...]
+  text string ["Talk sexy!! Make new friends or fall in love in the worlds most discreet text dating service. Just text VIP to 83110 and see who you could meet.",
+   "Good words.... But words may leave u in dismay many times.",
+   "Lol or I could just starve and lose a pound by the end of the day.",
+   "Ü eatin later but i'm eatin wif my frens now lei... Ü going home first? ",
+   "No go. No openings for that room 'til after thanksgiving without an upcharge.",
+   ...]
 >
 #Explorer.DataFrame<
   Polars[131 x 2]
-  labels f64 [1.0, 0.0, 0.0, 1.0, 1.0, ...]
-  text string ["As a valued customer, I am pleased to advise you that following recent review of your Mob No. you are awarded with a £1500 Bonus Prize, call 09066364589",
-   "Great. I was getting worried about you. Just know that a wonderful and caring person like you will have only the best in life. Know that u r wonderful and God's love is yours.",
-   "Remember all those whom i hurt during days of satanic imposter in me.need to pay a price,so be it.may destiny keep me going and as u said pray that i get the mind to get over the same.",
-   "PRIVATE! Your 2003 Account Statement for shows 800 un-redeemed S. I. M. points. Call 08715203694 Identifier Code: 40533 Expires 31/10/04",
-   "Dear Voucher Holder, To claim this weeks offer, at your PC please go to http://www.wtlp.co.uk/text. Ts&Cs apply.",
+  labels f64 [0.0, 1.0, 1.0, 0.0, 1.0, ...]
+  text string ["Dude got a haircut. Now its breezy up there",
+   "SMS SERVICES. for your inclusive text credits, pls goto www.comuk.net login= 3qxj9 unsubscribe with STOP, no extra charge. help 08702840625.COMUK. 220-CM2 9AE",
+   "Dear Voucher Holder, To claim this weeks offer, at you PC please go to http://www.e-tlp.co.uk/reward. Ts&Cs apply.",
+   "get ready to moan and scream :)",
+   "I want some cock! My hubby's away, I need a real man 2 satisfy me. Txt WIFE to 89938 for no strings action. (Txt STOP 2 end, txt rec £1.50ea. OTBox 731 LA1 7WS. )",
    ...]
 >
 #Explorer.DataFrame<
   Polars[261 x 2]
-  labels f64 [0.0, 1.0, 0.0, 1.0, 0.0, ...]
-  text string ["Appt is at &lt;TIME&gt; am. Not my fault u don't listen. I told u twice",
-   "IMPORTANT INFORMATION 4 ORANGE USER 0796XXXXXX. TODAY IS UR LUCKY DAY!2 FIND OUT WHY LOG ONTO http://www.urawinner.com THERE'S A FANTASTIC PRIZEAWAITING YOU!",
-   "K:)k:)good:)study well.",
-   "Your credits have been topped up for http://www.bubbletext.com Your renewal Pin is tgxxrz",
-   "S..antha num corrct dane", ...]
+  labels f64 [0.0, 1.0, 0.0, 0.0, 0.0, ...]
+  text string ["Ü neva tell me how i noe... I'm not at home in da aft wat... ",
+   "Dorothy@kiefer.com (Bank of Granite issues Strong-Buy) EXPLOSIVE PICK FOR OUR MEMBERS *****UP OVER 300% *********** Nasdaq Symbol CDGT That is a $5.00 per..",
+   "Please leave this topic..sorry for telling that..",
+   "How abt making some of the pics bigger?", "K:)k:)good:)study well.", ...]
 >
 ```
 
@@ -469,12 +469,11 @@ test_df = Explorer.DataFrame.slice(dataset, test_indexes) |> IO.inspect()
 ```
 #Explorer.DataFrame<
   Polars[261 x 2]
-  labels f64 [0.0, 1.0, 0.0, 1.0, 0.0, ...]
-  text string ["Appt is at &lt;TIME&gt; am. Not my fault u don't listen. I told u twice",
-   "IMPORTANT INFORMATION 4 ORANGE USER 0796XXXXXX. TODAY IS UR LUCKY DAY!2 FIND OUT WHY LOG ONTO http://www.urawinner.com THERE'S A FANTASTIC PRIZEAWAITING YOU!",
-   "K:)k:)good:)study well.",
-   "Your credits have been topped up for http://www.bubbletext.com Your renewal Pin is tgxxrz",
-   "S..antha num corrct dane", ...]
+  labels f64 [0.0, 1.0, 0.0, 0.0, 0.0, ...]
+  text string ["Ü neva tell me how i noe... I'm not at home in da aft wat... ",
+   "Dorothy@kiefer.com (Bank of Granite issues Strong-Buy) EXPLOSIVE PICK FOR OUR MEMBERS *****UP OVER 300% *********** Nasdaq Symbol CDGT That is a $5.00 per..",
+   "Please leave this topic..sorry for telling that..", "How abt making some of the pics bigger?",
+   "K:)k:)good:)study well.", ...]
 >
 ```
 
@@ -488,7 +487,7 @@ test_df = Explorer.DataFrame.slice(dataset, test_indexes) |> IO.inspect()
 
 ```
 {:ok,
- "labels,text\n0.0,Appt is at &lt;TIME&gt; am. Not my fault u don't listen. I told u twice\n1.0,IMPORTANT INFORMATION 4 ORANGE USER 0796XXXXXX. TODAY IS UR LUCKY DAY!2 FIND OUT WHY LOG ONTO http://www.urawinner.com THERE'S A FANTASTIC PRIZEAWAITING YOU!\n0.0,K:)k:)good:)study well.\n1.0,Your credits have been topped up for http://www.bubbletext.com Your renewal Pin is tgxxrz\n0.0,S..antha num corrct dane\n1.0,\"If you don't, your prize will go to another customer. T&C at www.t-c.biz 18+ 150p/min Polo Ltd Suite 373 London W1J 6HL Please call back if busy \"\n1.0,URGENT! We are trying to contact U. Todays draw shows that you have won a £800 prize GUARANTEED. Call 09050003091 from land line. Claim C52. Valid12hrs only\n0.0,\"What will we do in the shower, baby?\"\n1.0,dating:i have had two of these. Only started after i sent a text to talk sport radio last week. Any connection do you think or coincidence?\n1.0,We tried to call you re your reply to our sms for a video mobile 750 mins UNLIMITED TEXT free camcorder Reply or call now 08000930705 Del Thurs\n1.0,SplashMobile: Choose from 1000s of gr8 tones each wk! This is a subscrition service with weekly tones costing 300p. U have one credit - kick back and ENJOY\n1.0,\"Dear Voucher Holder, To claim this weeks offer, at you PC please go to http://www.e-tlp.co.uk/expressoffer Ts&Cs apply. To stop texts, txt STOP to 80062\"\n1.0,We tried to contact you re our offer of New Video Phone 750 anytime any network mins HALF PRICE Rental camcorder call 08000930705 or reply for delivery Wed\n1.0,You have WON a guaranteed £1000 cash or a £2000 prize. To claim yr prize call our customer service representative on 08714712394 between 10am-7pm\n0.0,Ok no prob... I'll come after lunch then...\n0.0,That's ok. I popped in to ask bout something and she said you'd been in. Are you around tonght wen this girl comes?\n1.0,Hi 07734396839 IBH Customer Loyalty Offer: The NEW NOKIA6600 Mobile from ONLY £10 at TXTAUCTION!Txt word:START to No:81151 & get Yours Now!4T&\n1.0,Ur balance is now £500. Ur next question is: Who sang 'Uptown Girl' in the 80's ? 2 answer txt ur ANSWER to 83600. Good luck!\n0.0,\"Hello, my love. What are you doing? Did you get to that interview today? Are you you happy? Are you being a good boy? Do you think of me?Are you missing me ?\"\n0.0,Yeah sure I'll leave in a min\n0.0,There are many company. Tell me the language.\n1.0,Congratulations ur awarded either £500 of CD gift vouchers & Free entry 2 our £100 weekly draw txt MUSIC to 87066 TnCs www.Ldew.com 1 win150ppmx3age16\n0.0,\"K, I'll work something out\"\n0.0,\"* Was really good to see you the other day dudette, been missing you!\"\n0.0,Please leave this topic..sorry for telling that..\n0.0,Alright. I'm out--have a good night!\n0.0,\"We made it! Eta at taunton is 12:30 as planned, hope that‘s still okday?! Good to see you! :-xx\"\n1.0,Promotion Number: 8714714 - UR awarded a City Break and could WIN a £200 Summer Shopping spree every WK. Txt STORE to 88039 . SkilGme. TsCs087147403231Winawk!Age16 £1.50perWKsub\n1.0,FREE>Ringtone! Reply REAL or POLY eg REAL1 1. PushButton 2. DontCha 3. BabyGoodbye 4. GoldDigger 5. WeBeBurnin 1st tone FREE and 6 more when u join for £3/wk\n0.0,Leave it de:-). Start Prepare for next:-)..\n1.0,Urgent! Please call 09061743810 from landline. Your ABTA complimentary 4* Tenerife Holiday or #5000 cash await collection SAE T&Cs Box 326 CW25WX 150 ppm\n0.0,\"Especially since i talk about boston all up in my personal statement, lol! I woulda changed that if i had realized it said nyc! It says boston now.\"\n1.0,\"SMS. ac sun0819 posts HELLO:\\\"\"You seem cool, wanted to say hi. HI!!!\\\"\" Stop? Send STOP to 62468\"\n1.0,\"Dear Voucher Holder, 2 claim this weeks offer, at your PC go to http://www.e-tlp.co.uk/expressoffer Ts&Cs apply.2 stop texts txt STOP to 80062.\"\n1.0,You have won a Nokia 7250i. This is what you get when you win our FREE auction. To take part send Nokia to 86021 now. HG/Suite342/2Lands Row/W1JHL 16+\n0.0,Is that what time you want me to come?\n1.0,FREE MSG:We billed your mobile number by mistake from shortcode 83332.Please call 08081263000 to have ch" <> ...}
+ "labels,text\n0.0,Ü neva tell me how i noe... I'm not at home in da aft wat... \n1.0,Dorothy@kiefer.com (Bank of Granite issues Strong-Buy) EXPLOSIVE PICK FOR OUR MEMBERS *****UP OVER 300% *********** Nasdaq Symbol CDGT That is a $5.00 per..\n0.0,Please leave this topic..sorry for telling that..\n0.0,How abt making some of the pics bigger?\n0.0,K:)k:)good:)study well.\n0.0,Thanks for understanding. I've been trying to tell sura that.\n1.0,FREE for 1st week! No1 Nokia tone 4 ur mob every week just txt NOKIA to 87077 Get txting and tell ur mates. zed POBox 36504 W45WQ norm150p/tone 16+\n1.0,\"Congrats! 2 mobile 3G Videophones R yours. call 09063458130 now! videochat wid your mates, play java games, Dload polyPH music, noline rentl.\"\n0.0,I'm really not up to it still tonight babe\n1.0,Bloomberg -Message center +447797706009 Why wait? Apply for your future http://careers. bloomberg.com\n1.0,I'd like to tell you my deepest darkest fantasies. Call me 09094646631 just 60p/min. To stop texts call 08712460324 (nat rate)\n0.0,They don't put that stuff on the roads to keep it from getting slippery over there?\n0.0,Don't fret. I'll buy the ovulation test strips and send them to you. You wont get them til like march. Can you send me your postal address.u'll be alright.Okay.\n1.0,Well done ENGLAND! Get the official poly ringtone or colour flag on yer mobile! text TONE or FLAG to 84199 NOW! Opt-out txt ENG STOP. Box39822 W111WX £1.50\n1.0,Back 2 work 2morro half term over! Can U C me 2nite 4 some sexy passion B4 I have 2 go back? Chat NOW 09099726481 Luv DENA Calls £1/minMobsmoreLKPOBOX177HP51FL\n0.0,Ok i go change also...\n0.0,Hello madam how are you ?\n1.0,Kit Strip - you have been billed 150p. Netcollex Ltd. PO Box 1013 IG11 OJA\n1.0,Our records indicate u maybe entitled to 5000 pounds in compensation for the Accident you had. To claim 4 free reply with CLAIM to this msg. 2 stop txt STOP\n0.0,Pls confirm the time to collect the cheque.\n0.0,Now get step 2 outta the way. Congrats again.\n1.0,FREE for 1st week! No1 Nokia tone 4 ur mobile every week just txt NOKIA to 8077 Get txting and tell ur mates. www.getzed.co.uk POBox 36504 W45WQ 16+ norm150p/tone\n1.0,Todays Voda numbers ending with 7634 are selected to receive a £350 reward. If you have a match please call 08712300220 quoting claim code 7684 standard rates apply.\n0.0,And by when you're done I mean now\n0.0,\"Hello. No news on job, they are making me wait a fifth week! Yeah im up for some woozles and weasels... In exeter still, but be home about 3. \"\n1.0,WINNER!! As a valued network customer you have been selected to receivea £900 prize reward! To claim call 09061701461. Claim code KL341. Valid 12 hours only.\n0.0,\"Sorry, I'll call later in meeting.\"\n0.0,So lets make it saturday or monday as per convenience.\n0.0,Minimum walk is 3miles a day.\n0.0,Dear umma she called me now :-)\n0.0,I can take you at like noon\n1.0,We have new local dates in your area - Lots of new people registered in YOUR AREA. Reply DATE to start now! 18 only www.flirtparty.us REPLYS150\n0.0,Many more happy returns of the day. I wish you happy birthday.\n1.0,Moby Pub Quiz.Win a £100 High Street prize if u know who the new Duchess of Cornwall will be? Txt her first name to 82277.unsub STOP £1.50 008704050406 SP Arrow\n0.0,\"There're some people by mu, I'm at the table by lambda\"\n1.0,Buy Space Invaders 4 a chance 2 win orig Arcade Game console. Press 0 for Games Arcade (std WAP charge) See o2.co.uk/games 4 Terms + settings. No purchase\n0.0,Wow so healthy. Old airport rd lor. Cant thk of anything else. But i'll b bathing my dog later.\n1.0,\"YOUR CHANCE TO BE ON A REALITY FANTASY SHOW call now = 08707509020 Just 20p per min NTT Ltd, PO Box 1327 Croydon CR9 5WB 0870 is a national = rate call.\"\n1.0,Not heard from U4 a while. Call 4 rude chat private line 01223585334 to cum. Wan 2C pics of me gettin shagged then text PIX to 8552. 2End send STOP 8552 SAM xxx\n1.0,\"Mila, age23, blonde, new in UK. I look sex with UK guys. if u like fun with me. Text MTALK to 69866.18 . 30pp/txt 1st 5free. £1.50 increments. Help08718728876\"\n1.0,\"Dear Matthew please call 0" <> ...}
 ```
 
 ```elixir
@@ -549,21 +548,21 @@ Bumblebee.apply_tokenizer(tokenizer, "<|endoftext|>")
 %{
   "attention_mask" => #Nx.Tensor<
     u32[1][1]
-    EXLA.Backend<host:0, 0.1354661623.2442002456.32061>
+    EXLA.Backend<host:0, 0.3156742617.1058668568.75719>
     [
       [1]
     ]
   >,
   "input_ids" => #Nx.Tensor<
     u32[1][1]
-    EXLA.Backend<host:0, 0.1354661623.2442002456.32060>
+    EXLA.Backend<host:0, 0.3156742617.1058668568.75718>
     [
       [50256]
     ]
   >,
   "length" => #Nx.Tensor<
     s32[1]
-    EXLA.Backend<host:0, 0.1354661623.2442002458.387>
+    EXLA.Backend<host:0, 0.3156742617.1058668574.44046>
     [1]
   >
 }
@@ -618,7 +617,7 @@ Bumblebee.apply_tokenizer(tokenizer, dataset["text"][962])["input_ids"]
 ```
 #Nx.Tensor<
   u32[1][204]
-  EXLA.Backend<host:0, 0.1354661623.2442002456.36064>
+  EXLA.Backend<host:0, 0.3156742617.1058668568.79722>
   [
     [464, 938, 1517, 1312, 1683, 2227, 284, 466, 373, 5938, 345, 13, 843, 1312, 1422, 470, 892, 340, 561, 423, 13, 921, 1549, 6487, 11, 307, 4072, 283, 21390, 11, 12233, 262, 7621, 290, 1394, 1016, 13, 887, 355, 1290, 355, 1312, 2993, 11, 340, 2492, 470, 772, 510, 13, ...]
   ]
@@ -634,7 +633,7 @@ Nx.pad(Nx.tensor([[1, 2, 3]]), 0, [{0, 0, 0}, {0, 5, 0}])
 ```
 #Nx.Tensor<
   s32[1][8]
-  EXLA.Backend<host:0, 0.1354661623.2442002456.36067>
+  EXLA.Backend<host:0, 0.3156742617.1058668568.79725>
   [
     [1, 2, 3, 0, 0, 0, 0, 0]
   ]
@@ -723,209 +722,209 @@ Enum.at(validation_dataset, 5)
   {%{
      "attention_mask" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42834>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86491>
        [
          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
        ]
      >,
      "input_ids" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42833>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86490>
        [
-         [30074, 2956, 6920, 360, 576, 538, 13, 40716, 345, 523, 881, 392, 804, 2651, 284, 6041, 286, 1104, 986, 548, 1342, 13961, 994, 11, 38947, 530, 8710, 1018, 33067, 345, 4750, 13, 39532, 6254, 611, 407, 2739, 11, 72, 2236, 1949, 284, 1282, 510, 10597, 612, ...]
+         [42, 11, 266, 268, 2956, 1479, 1282, 284, 616, 1363, 290, 635, 13632, 410, 1134, 2584, 1312, 387, 85, 1908, 6920, 284, 683, 635, 492, 11625, 1282, 6180, 4229, 307, 1479, 1909, 46088, 81, 718, 4426, 492, 21912, 8, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
        ]
      >,
      "length" => #Nx.Tensor<
        s32[1]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42835>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86492>
        [205]
      >
    },
    #Nx.Tensor<
      f32[1]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.42836>
+     EXLA.Backend<host:0, 0.3156742617.1058668568.86493>
      [0.0]
    >},
   {%{
      "attention_mask" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42841>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86498>
        [
          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
        ]
      >,
      "input_ids" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42840>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86497>
        [
-         [1639, 460, 16565, 4248, 17, 13, 1120, 284, 4725, 8476, 37, 338, 7740, 13146, 403, 6277, 9336, 1104, 1814, 416, 36634, 23917, 6158, 284, 807, 2414, 25429, 13, 4248, 17, 13, 1120, 481, 307, 2087, 284, 534, 1306, 2855, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+         [40, 892, 345, 815, 467, 262, 24345, 2975, 13, 4889, 262, 3331, 9439, 13, 6363, 262, 5802, 5370, 326, 787, 514, 1049, 661, 13, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
        ]
      >,
      "length" => #Nx.Tensor<
        s32[1]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42842>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86499>
        [205]
      >
    },
    #Nx.Tensor<
      f32[1]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.42843>
-     [1.0]
+     EXLA.Backend<host:0, 0.3156742617.1058668568.86500>
+     [0.0]
    >},
   {%{
      "attention_mask" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42848>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86505>
        [
          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
        ]
      >,
      "input_ids" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42847>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86504>
        [
-         [1870, 326, 338, 3734, 11, 314, 1392, 1576, 3600, 284, 938, 749, 286, 262, 1755, 379, 1551, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+         [10049, 264, 3658, 290, 37437, 323, 9912, 523, 663, 845, 2408, 25, 8, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
        ]
      >,
      "length" => #Nx.Tensor<
        s32[1]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42849>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86506>
        [205]
      >
    },
    #Nx.Tensor<
      f32[1]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.42850>
+     EXLA.Backend<host:0, 0.3156742617.1058668568.86507>
      [0.0]
    >},
   {%{
      "attention_mask" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42855>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86512>
        [
          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
        ]
      >,
      "input_ids" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42854>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86511>
        [
-         [3855, 257, 17189, 5175, 2008, 2137, 17189, 3807, 13, 1675, 2824, 2420, 10351, 284, 9919, 13348, 13, 6363, 1479, 0, 17221, 7328, 460, 307, 6149, 256, 338, 290, 269, 338, 4174, 13, 1248, 331, 3808, 691, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+         [3260, 262, 2563, 673, 481, 307, 1498, 284, 4483, 13, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
        ]
      >,
      "length" => #Nx.Tensor<
        s32[1]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42856>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86513>
        [205]
      >
    },
    #Nx.Tensor<
      f32[1]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.42857>
-     [1.0]
+     EXLA.Backend<host:0, 0.3156742617.1058668568.86514>
+     [0.0]
    >},
   {%{
      "attention_mask" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42862>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86519>
        [
          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
        ]
      >,
      "input_ids" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42861>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86518>
        [
-         [24446, 616, 220, 2089, 2095, 543, 334, 360, 429, 4300, 287, 502, 13, 314, 1183, 1949, 284, 1487, 287, 220, 1222, 2528, 26, 2, 5, 13655, 26, 764, 314, 32660, 751, 256, 265, 362, 616, 649, 614, 6323, 13, 39669, 329, 2956, ...]
+         [2504, 2331, 38347, 17696, 378, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
        ]
      >,
      "length" => #Nx.Tensor<
        s32[1]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42863>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86520>
        [205]
      >
    },
    #Nx.Tensor<
      f32[1]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.42864>
+     EXLA.Backend<host:0, 0.3156742617.1058668568.86521>
      [0.0]
    >},
   {%{
      "attention_mask" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42869>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86526>
        [
          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
        ]
      >,
      "input_ids" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42868>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86525>
        [
-         [40, 1053, 587, 2111, 284, 3151, 683, 1231, 1943, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+         [10248, 3993, 318, 546, 18662, 13, 383, 1048, 468, 284, 4474, 257, 18662, 326, 262, 1767, 481, 2193, 290, 779, 13, 1002, 345, 765, 284, 760, 517, 47226, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
        ]
      >,
      "length" => #Nx.Tensor<
        s32[1]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42870>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86527>
        [205]
      >
    },
    #Nx.Tensor<
      f32[1]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.42871>
+     EXLA.Backend<host:0, 0.3156742617.1058668568.86528>
      [0.0]
    >},
   {%{
      "attention_mask" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42876>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86533>
        [
          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
        ]
      >,
      "input_ids" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42875>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86532>
        [
-         [16012, 19489, 2264, 528, 370, 74, 306, 1195, 0, 7178, 257, 1353, 10184, 12490, 2137, 611, 334, 760, 543, 1499, 262, 978, 4563, 303, 318, 287, 30, 309, 742, 9093, 81, 284, 807, 1828, 3324, 13, 4248, 16, 13, 1120, ...]
+         [36875, 351, 534, 1438, 290, 2209, 290, 7013, 17682, 19644, 36, 9306, 11050, 24582, 257, 2745, 3190, 1479, 19711, 379, 2972, 3298, 7064, 7324, 13, 746, 65, 16, 13, 785, 872, 25, 2919, 9879, 40064, 1120, 4349, 1120, 79, 50256, ...]
        ]
      >,
      "length" => #Nx.Tensor<
        s32[1]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42877>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86534>
        [205]
      >
    },
    #Nx.Tensor<
      f32[1]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.42878>
+     EXLA.Backend<host:0, 0.3156742617.1058668568.86535>
      [1.0]
    >},
   {%{
      "attention_mask" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42883>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86540>
        [
          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...]
        ]
      >,
      "input_ids" => #Nx.Tensor<
        u32[1][205]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42882>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86539>
        [
-         [1639, 423, 1839, 5633, 16, 11, 830, 5003, 393, 257, 5633, 17, 11, 830, 11596, 0, 1675, 1624, 11, 869, 2931, 2713, 2388, 34159, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, ...]
+         [43, 29150, 468, 1239, 587, 428, 881, 1257, 290, 1049, 1566, 345, 1625, 287, 13, 921, 925, 340, 4988, 2041, 329, 502, 13, 314, 1839, 470, 6044, 345, 0, 2883, 2488, 530, 308, 46583, 14, 82, 907, 50256, 50256, ...]
        ]
      >,
      "length" => #Nx.Tensor<
        s32[1]
-       EXLA.Backend<host:0, 0.1354661623.2442002456.42884>
+       EXLA.Backend<host:0, 0.3156742617.1058668568.86541>
        [205]
      >
    },
    #Nx.Tensor<
      f32[1]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.42885>
+     EXLA.Backend<host:0, 0.3156742617.1058668568.86542>
      [1.0]
    >}
 ]
@@ -963,7 +962,7 @@ GPTModel.generate_text(gpt2_model, params, tokenizer, input_text, 15) |> IO.puts
 <!-- livebook:{"output":true} -->
 
 ```
-Every effort moves you forward and your happiness. It takes stupid Kat Blanche adults to tens of seconds
+Every effort moves you forward depending on your circumstances, and our Charities do amazing things. To help
 ```
 
 <!-- livebook:{"output":true} -->
@@ -989,7 +988,8 @@ GPTModel.generate_text(gpt2_model, params, tokenizer, input_text, 15) |> IO.puts
 Is the following text 'spam'? Answer with 'yes' or 'no':
 'You are a winner you have been specially
 selected to receive $1000 cash or a $2000 award.'
-There was no cash or money award at the event. All garbage was code
+**************
+And then what's in this 'spam' section of
 ```
 
 <!-- livebook:{"output":true} -->
@@ -1061,7 +1061,7 @@ result = predict_fn.(params, input)
 ```
 #Nx.Tensor<
   f32[1][3][50257]
-  EXLA.Backend<host:0, 0.1354661623.2442002456.93996>
+  EXLA.Backend<host:0, 0.3156742617.1058668568.137654>
   [
     [
       [-39.308448791503906, -39.010066986083984, -41.837467193603516, -41.781246185302734, -40.84248352050781, -40.89142990112305, -38.62623596191406, -40.154056549072266, -38.097896575927734, -41.04249954223633, -40.9429931640625, -36.262168884277344, -37.39033889770508, -36.03800964355469, -38.52249526977539, -40.54604721069336, -39.718971252441406, -39.7431640625, -40.27290344238281, -40.314857482910156, -40.54868698120117, -41.00197219848633, -40.9098014831543, -40.914119720458984, -41.297733306884766, -37.69235610961914, -39.106632232666016, -41.460182189941406, -40.526241302490234, -40.43655014038086, -38.97370147705078, -41.32615661621094, -39.90999984741211, -40.565555572509766, -40.7227897644043, -40.8016471862793, -40.875083923339844, -40.86553955078125, -40.39710998535156, -40.221649169921875, -38.78817367553711, -40.58393096923828, -40.43303298950195, -40.767242431640625, -40.72999572753906, -40.78556442260742, -40.461753845214844, -41.084720611572266, -41.600372314453125, -41.25688552856445, ...],
@@ -1094,7 +1094,7 @@ result = predict_fn.(class_params, input)
 
 ```
 
-23:19:18.700 [warning] found unexpected key in the initial parameters map: "language_modeling_head.output"
+21:57:04.370 [warning] found unexpected key in the initial parameters map: "language_modeling_head.output"
 
 ```
 
@@ -1103,12 +1103,12 @@ result = predict_fn.(class_params, input)
 ```
 #Nx.Tensor<
   f32[1][3][2]
-  EXLA.Backend<host:0, 0.1354661623.2442002456.118778>
+  EXLA.Backend<host:0, 0.3156742617.1058668568.139235>
   [
     [
-      [-3.8797473907470703, 7.0085954666137695],
-      [-8.825791358947754, 8.111058235168457],
-      [-17.165937423706055, 17.73089027404785]
+      [-7.016830921173096, 9.019796371459961],
+      [-13.289033889770508, 18.227890014648438],
+      [-25.500877380371094, 32.176109313964844]
     ]
   ]
 >
@@ -1124,21 +1124,21 @@ result = predict_fn.(class_params, input)
 {%{
    "attention_mask" => #Nx.Tensor<
      u32[1][3]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.6746>
+     EXLA.Backend<host:0, 0.3156742617.1058668568.50404>
      [
        [1, 1, 1]
      ]
    >,
    "input_ids" => #Nx.Tensor<
      u32[1][3]
-     EXLA.Backend<host:0, 0.1354661623.2442002456.6745>
+     EXLA.Backend<host:0, 0.3156742617.1058668568.50403>
      [
        [40, 765, 284]
      ]
    >,
    "length" => #Nx.Tensor<
      s32[1]
-     EXLA.Backend<host:0, 0.1354661623.2441740314.255111>
+     EXLA.Backend<host:0, 0.3156742617.1058668574.36626>
      [3]
    >
  },
@@ -1186,12 +1186,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.7.self_attention.value" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246643>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28157>
       [-0.0015067235799506307, 0.011825020425021648, -0.015962932258844376, -0.009843949228525162, 0.017166582867503166, -0.0023309593088924885, 0.01716618798673153, -0.01785222440958023, 0.02480374090373516, -0.04544716328382492, -0.04233347252011299, 0.19252289831638336, 0.023084215819835663, 0.010606026276946068, 0.020862935110926628, -0.014164811000227928, 0.04407064616680145, -0.001367615768685937, 0.03417485952377319, 0.0010759946890175343, 0.020503727719187737, -0.018043607473373413, -0.00980320293456316, 0.028919916599988937, -0.003041631542146206, -0.041081931442022324, -0.030980169773101807, 0.0037019671872258186, 0.009434754960238934, -0.004209163598716259, 0.0016339614521712065, 0.02209661342203617, -0.014821838587522507, -0.02030492015182972, 0.03273279219865799, -0.04265918210148811, 0.00601721927523613, 0.00928163155913353, -0.028216741979122162, -0.007809154689311981, -0.03414953500032425, -0.011486138217151165, -0.006398558616638184, -0.014157279394567013, 0.010680632665753365, -0.06726251542568207, -0.0386282317340374, 0.007625897414982319, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246642>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28156>
       [
         [0.021402638405561447, 0.050967343151569366, 0.04545518010854721, -0.0109089445322752, -0.04193441942334175, -0.023326827213168144, 0.09840112924575806, 0.10209610313177109, 0.05283593386411667, 0.034540046006441116, 0.05829596519470215, -0.1514427661895752, 0.0445757620036602, -0.014143920503556728, 0.009306855499744415, 0.07754021883010864, 0.11058628559112549, -0.11392591893672943, 0.05147108808159828, 0.014121315442025661, 0.0954991802573204, 0.032277483493089676, 0.09881661087274551, 0.13257817924022675, -0.02898217923939228, -0.08612077683210373, -0.10402683913707733, 0.032209958881139755, 0.07464122027158737, -0.04770876094698906, -0.12873615324497223, 0.04697330668568611, -0.04240507632493973, -0.058180730789899826, 9.088746155612171e-4, 0.05110365152359009, 0.20511674880981445, -0.020681431517004967, -0.01085528265684843, -0.1648135483264923, 0.038136307150125504, -0.01178289670497179, -0.005067809019237757, -0.11831668764352798, 0.08509404212236404, -0.008230645209550858, 0.08802532404661179, ...],
         ...
@@ -1201,12 +1201,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.0.ffn.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247231>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28746>
       [0.045023269951343536, 0.03226305544376373, -0.08854541927576065, -0.008162474259734154, 0.11771649867296219, -0.2388763129711151, -0.0758744403719902, 0.029564158990979195, 0.04648246616125107, -0.0027773359324783087, -0.0038145091384649277, 0.020842736586928368, 0.009267736226320267, 0.03588847070932388, -0.1409134566783905, 0.06138546019792557, -0.06896162778139114, -0.012951075099408627, 0.06189567223191261, -0.017779534682631493, 0.021359939128160477, -0.05501718819141388, 0.02197490818798542, 0.0011829776922240853, 0.04943571239709854, 0.04192988574504852, 0.07189816981554031, -0.020239252597093582, 0.06509828567504883, 0.10963835567235947, 0.04001740366220474, 0.03582198917865753, 0.06442175805568695, -0.031552474945783615, 0.020920773968100548, -0.05902986228466034, 0.019308188930153847, -0.03758474066853523, 0.04784710705280304, 0.1294996589422226, 0.0656597912311554, 0.16015131771564484, 0.0036071811337023973, 0.013143805786967278, 0.08715710043907166, -0.05141830816864967, 0.10630246251821518, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[3072][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246577>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28091>
       [
         [-0.10660640895366669, 0.1527840495109558, 0.03310481086373329, 0.023700203746557236, 0.02993733063340187, -0.07244370877742767, -0.55028235912323, 0.10002829134464264, 0.10845957696437836, -0.06486132740974426, -0.050516318529844284, -0.04687585309147835, -0.019445782527327538, -0.031208522617816925, -0.1474572867155075, 0.00985053088515997, 0.14931969344615936, 0.07806558161973953, -9.190309210680425e-4, 0.23059925436973572, -0.021436616778373718, 0.04766186699271202, -0.07279295474290848, 0.06045343354344368, 0.013344594277441502, 0.16240741312503815, 0.11852358281612396, -0.02879641018807888, 0.05925842374563217, 0.12395480275154114, -0.09108705073595047, -0.01235614251345396, 0.03735384717583656, -0.022464079782366753, -0.045593757182359695, -0.27166813611984253, -0.04527653008699417, 0.03668154403567314, 0.08654572069644928, 0.023413583636283875, -0.08427132666110992, -0.03452301397919655, 0.03188594430685043, -0.043258294463157654, -0.05696522071957588, 0.018179383128881454, ...],
         ...
@@ -1216,12 +1216,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.2.self_attention.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247468>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28983>
       [0.020700350403785706, -0.26381751894950867, -0.1094379648566246, 0.2875203490257263, 0.2774174213409424, 0.04697851091623306, 0.062320489436388016, 0.025348320603370667, -0.1447840929031372, 0.23507045209407806, -0.22111418843269348, -0.04685695096850395, 0.04695908725261688, -0.08256081491708755, 0.049968790262937546, 0.0957123190164566, 0.008569050580263138, 0.36251145601272583, 0.026079699397087097, 0.14226137101650238, 0.30309706926345825, -0.051855895668268204, -0.041972529143095016, 0.045346442610025406, 0.09475845843553543, 0.03463638201355934, 0.11646518856287003, -0.13341329991817474, 0.10428164899349213, -0.16626955568790436, 0.008327489718794823, 0.11973997205495834, 0.1891246736049652, 0.27689802646636963, 0.07897856086492538, 0.2317073494195938, 3.121290064882487e-4, 0.014473449438810349, -0.22102972865104675, -0.024565676227211952, 0.0030907581094652414, -0.10433603823184967, 0.2853952944278717, 0.022545315325260162, 0.10485214740037918, 0.2518227994441986, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246649>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28163>
       [
         [-0.013124971650540829, -0.06660282611846924, -0.0697135180234909, -0.030710719525814056, 0.042854610830545425, 0.008408921770751476, -0.03381262347102165, 0.06493787467479706, -0.03271748125553131, 0.12311036139726639, 0.1337415724992752, 0.10496947169303894, 0.0691475197672844, 0.015230960212647915, -0.07322822511196136, -0.05089348554611206, 0.09375757724046707, -0.13991476595401764, -0.05577455088496208, 0.04202907159924507, -0.028392035514116287, -0.07780732214450836, -0.05117521435022354, -0.010147273540496826, -0.09198098629713058, -0.15541940927505493, -0.09189142286777496, 0.04543245583772659, 0.05888330563902855, 0.007717895321547985, -0.055146679282188416, -0.10239534080028534, 0.01507049985229969, -0.01887754164636135, -0.06463737785816193, -0.10168686509132385, -0.04603245481848717, -0.03781770542263985, 0.08949298411607742, -0.014968409202992916, 0.01719915308058262, 0.01886896975338459, 0.040570300072431564, 0.052193399518728256, -0.04610079526901245, ...],
         ...
@@ -1231,24 +1231,24 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.6.output_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247213>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28728>
       [0.045025456696748734, 0.009542928077280521, 0.016986900940537453, 0.013239625841379166, 0.022165829315781593, -0.02997750975191593, -0.05318791791796684, 0.030291369184851646, 0.021082192659378052, 0.014847509562969208, -1.6169920513675606e-7, 0.0210530087351799, 0.056806933134794235, 0.009754392318427563, -0.06860926002264023, 0.03423593193292618, -0.02938588336110115, 0.015446092002093792, 0.010956122539937496, -0.02942276932299137, 0.03855720907449722, 0.01702086068689823, -0.005053986329585314, 0.017972847446799278, 0.014045481570065022, 0.021662695333361626, 0.02321026474237442, 0.04095667600631714, 0.0021895733661949635, 0.016517585143446922, -0.004257701337337494, -0.013539420440793037, -0.01618128828704357, -0.007974829524755478, -0.004954650532454252, -0.03999199718236923, -0.02632948011159897, -0.01814391277730465, 0.004013486206531525, 0.007407412398606539, 0.001718125189654529, 0.019525639712810516, 0.0014584340387955308, 0.022858886048197746, 5.235132412053645e-4, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247210>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28725>
       [0.25878557562828064, 0.2482416182756424, 0.27244293689727783, 0.2566904127597809, 0.2704152762889862, 0.2627618908882141, 0.29589709639549255, 0.18097728490829468, 0.2705056071281433, 0.2587742209434509, 0.26464471220970154, 0.2627030909061432, 0.2763660252094269, 0.26602861285209656, 0.2792193293571472, 0.262694776058197, 0.2730119526386261, 0.2646535038948059, 0.24892735481262207, 0.24463066458702087, 0.2625494599342346, 0.2543585002422333, 0.2724483907222748, 0.23977135121822357, 0.2607770562171936, 0.25832539796829224, 0.2607426345348358, 0.2576335072517395, 0.2551948130130768, 0.2608013451099396, 0.2707134485244751, 0.2568177878856659, 0.2546869218349457, 0.24516521394252777, 0.2724584937095642, 0.27050986886024475, 0.22996947169303894, 0.2724611461162567, 0.2426939308643341, 0.24848425388336182, 0.2568362355232239, 0.2662496268749237, 0.2592116594314575, 0.2666124701499939, ...]
     >
   },
   "decoder.blocks.11.ffn.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247129>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28644>
       [0.105723537504673, 0.11879222095012665, 0.006737913005053997, 0.05425174906849861, -0.020953308790922165, 0.00772686256095767, 0.05538606271147728, 0.05174220725893974, 0.02458597719669342, 0.05650372430682182, 0.07260715216398239, 0.015075696632266045, 0.07118107378482819, -0.02622274123132229, -0.004771863576024771, 0.13389313220977783, -0.04042479023337364, -0.09605908393859863, 0.05143333226442337, -0.0777275338768959, -0.038933414965867996, -0.01103443093597889, 0.22768071293830872, -0.051514096558094025, -0.09891602396965027, 0.0014073842903599143, -0.04144133999943733, 0.034522294998168945, -0.009654851630330086, 0.005805726628750563, 0.04466322436928749, -0.047319527715444565, -0.009854177013039589, 0.01743702031672001, 0.1440771073102951, -0.12892374396324158, 0.18401136994361877, -0.017713360488414764, -0.21362674236297607, 0.06416985392570496, 0.07322429120540619, 0.08671480417251587, 0.0764789879322052, 0.057795871049165726, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[3072][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246550>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28064>
       [
         [0.06805934756994247, 0.09200220555067062, -0.03102017380297184, -0.20520317554473877, 0.06265048682689667, 0.17043784260749817, 0.037615444511175156, -0.24390925467014313, -0.06584632396697998, -0.36999693512916565, 0.19122055172920227, 0.07945571839809418, 0.008697953075170517, 0.19716542959213257, 0.17863412201404572, -0.01731661520898342, -0.3208216726779938, 0.21022184193134308, 0.080193892121315, 0.07145563513040543, -0.24923168122768402, -0.050284698605537415, -0.2518293559551239, 0.2810163199901581, -0.28573331236839294, 0.12340781837701797, -0.0859503522515297, 0.08418150991201401, -0.03493265062570572, 0.13855530321598053, -0.241315558552742, 0.15032462775707245, -0.25630655884742737, -0.03904435783624649, 0.0643249899148941, 0.26296404004096985, 0.44665995240211487, -0.001308600651100278, 0.16780276596546173, -0.14047899842262268, -0.03252283111214638, -0.3422131836414337, -0.15174603462219238, ...],
         ...
@@ -1258,12 +1258,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.3.self_attention.value" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246543>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28057>
       [0.01611318439245224, 1.9620818784460425e-4, -0.033592935651540756, -0.014356587082147598, -0.010978053323924541, -0.005805983208119869, 0.0022555338218808174, 0.007051336579024792, 0.014428694732487202, -0.019858360290527344, -0.058242809027433395, -0.027789494022727013, -0.021741623058915138, 0.02190697006881237, -0.0035076746717095375, 0.002187394769862294, -0.022275205701589584, -0.009000930935144424, 0.0014367415569722652, -0.02442094311118126, -0.02785932831466198, -0.027073200792074203, 0.009673072025179863, -0.01975858025252819, -0.006040024105459452, -0.005454181227833033, -0.012051430530846119, 0.007628345862030983, -0.0019122350495308638, -0.031798556447029114, -0.03979314863681793, 0.0018334127962589264, 5.315942107699811e-4, -0.02355266362428665, 0.019198285415768623, -0.01209992729127407, 0.011508915573358536, 0.033759962767362595, 0.003140085143968463, -0.43169018626213074, -0.004638292361050844, 0.029909860342741013, -0.026687445119023323, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246541>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28055>
       [
         [0.02292151376605034, 0.0338389091193676, -0.047796934843063354, 0.09596998244524002, 0.045752089470624924, -0.030947083607316017, -0.06484285742044449, -0.021927157416939735, 0.08957719802856445, -0.06526286900043488, 0.048477549105882645, -0.007700455840677023, -0.09442861378192902, -0.13685542345046997, -0.10288318246603012, -0.09903551638126373, 0.17210477590560913, -0.014380788430571556, -0.081391841173172, -0.09592964500188828, -0.20048144459724426, -0.014696544967591763, 0.08353224396705627, 0.10173220932483673, -0.05892166867852211, -0.0928846076130867, 0.07746145129203796, 0.12805286049842834, -0.14344947040081024, 0.12638360261917114, 0.03233393654227257, 0.044042039662599564, -0.0408482551574707, -0.08512827754020691, 0.17795124650001526, -0.18981613218784332, -0.04125617817044258, 0.018192069604992867, 0.19313742220401764, -0.08462966978549957, 0.13086268305778503, 0.18106544017791748, ...],
         ...
@@ -1273,12 +1273,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.3.self_attention.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247393>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28908>
       [-0.014248297549784184, -0.240375816822052, -0.018260201439261436, 0.11563233286142349, 0.18061132729053497, 0.04692136496305466, -0.009259623475372791, -0.05987045168876648, -0.10537739843130112, 0.10199987143278122, -0.10119312256574631, 0.054955385625362396, 0.08877909928560257, -0.034204259514808655, -0.030978145077824593, -0.14948132634162903, 0.013923843391239643, 0.22173760831356049, -0.044307757169008255, 0.11177702248096466, 0.25232768058776855, -0.011090553365647793, -0.02736673317849636, -0.05436551198363304, 0.035498980432748795, 0.06144917383790016, 0.10569152981042862, -0.06352245807647705, -0.014585292898118496, -0.08527898788452148, 0.06996647268533707, 0.15424810349941254, 0.2633742094039917, 0.07891955971717834, 0.10157502442598343, 0.15565523505210876, -0.05072539672255516, -0.015324545092880726, -0.13633786141872406, -0.0920839011669159, 0.02864094078540802, -0.1776469349861145, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246623>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28137>
       [
         [0.06602837890386581, -0.005861711222678423, -0.03592158108949661, -0.17321670055389404, -0.040567655116319656, -0.12914139032363892, -0.039053335785865784, 0.055556997656822205, -0.03793487325310707, -0.040671199560165405, -0.10253544896841049, -0.010256040841341019, -0.046774111688137054, -0.04418528825044632, -0.19765710830688477, 0.03096650168299675, 0.04684501513838768, -0.0827573910355568, 0.06590650230646133, 0.0626329854130745, -0.03907793387770653, -0.08920115977525711, 0.12399065494537354, 0.11888366937637329, 0.04018740355968475, -0.06762197613716125, -0.007350870408117771, 0.0679413229227066, -0.05717582628130913, -0.006823679432272911, -0.037478987127542496, -0.022401340305805206, -0.026354540139436722, -0.16326986253261566, 0.026277117431163788, -0.04454047232866287, -0.19500863552093506, -0.10626175254583359, 0.09581570327281952, 9.76486480794847e-4, 0.03719896450638771, ...],
         ...
@@ -1288,12 +1288,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.7.ffn.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247279>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28794>
       [0.003023461438715458, -0.0034503634087741375, -0.05022025108337402, 0.1445682793855667, -0.061383385211229324, -0.18525145947933197, 0.05382299795746803, 0.09621239453554153, 0.22644995152950287, 0.13868243992328644, -0.10454718768596649, -0.0445207841694355, 0.17207269370555878, 0.13456888496875763, -0.08831684291362762, -0.02446838468313217, -0.031328264623880386, 0.12339051067829132, 0.055783338844776154, -0.06627967208623886, 0.12010461091995239, -0.005991296377032995, -0.012475112453103065, -0.0091325668618083, -0.12514269351959229, -0.03106873109936714, -0.07901277393102646, 0.10679206997156143, 0.023926347494125366, 0.19130189716815948, -0.07669995725154877, -3.717075742315501e-4, -0.022119715809822083, -0.12196514755487442, -0.006166365463286638, -0.003968436270952225, 0.17010942101478577, -0.08083401620388031, -0.06381057947874069, 0.012830626219511032, 0.008812617510557175, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[3072][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246587>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28101>
       [
         [0.02272615395486355, -0.03426380455493927, 0.10830746591091156, -0.0698532909154892, -0.04444117844104767, -0.1163613572716713, -0.10804831981658936, 0.027915891259908676, -0.06091436743736267, 0.11493780463933945, -0.12441886961460114, -0.12758924067020416, -0.08719192445278168, -0.08544804900884628, 0.01870325393974781, 0.06337859481573105, -0.05752550810575485, 0.08484397083520889, 0.10050169378519058, -8.142094011418521e-4, 0.04208269715309143, -0.0010115094482898712, 0.016743609681725502, -0.14341019093990326, -0.11040765047073364, -0.015847202390432358, 0.06745976209640503, 0.028722982853651047, 0.034336477518081665, -0.02375819906592369, -0.04028434678912163, 0.04014326259493828, -0.0828038826584816, 0.04731905460357666, -0.030171439051628113, 0.007872296497225761, -0.0554569847881794, -0.057010941207408905, -0.03682035207748413, 0.003613386768847704, ...],
         ...
@@ -1303,12 +1303,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.2.self_attention.value" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246686>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28200>
       [3.5320030292496085e-4, -0.02352035790681839, 0.03579441457986832, -0.00819009356200695, -0.013341247104108334, 0.22570614516735077, 0.014364250004291534, 0.01957814209163189, -0.0029258071444928646, -0.005615453235805035, 0.006173497997224331, 0.03394452482461929, 0.04145542159676552, 0.02271554060280323, 0.027301738038659096, 0.023053526878356934, -0.030637608841061592, 0.0011183557799085975, 0.009655783884227276, -0.0031652075704187155, 0.004611491225659847, -8.690875256434083e-4, -0.0060260300524532795, -0.009716540575027466, 0.014348393306136131, -0.010869566351175308, -0.015734069049358368, 0.02538462169468403, -0.02972058765590191, -5.710391560569406e-4, 9.462513262405992e-4, 0.022110195830464363, 0.004091514740139246, 9.700193768367171e-4, 0.009012877009809017, -0.013626644387841225, 0.38099005818367004, 0.01451069489121437, -0.023601410910487175, 0.018054811283946037, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246685>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28199>
       [
         [-0.05810696259140968, 0.06249383091926575, -0.16588400304317474, 0.09654977917671204, 0.09147700667381287, 0.048064541071653366, -0.09367276728153229, 0.014363005757331848, 0.10144679248332977, 0.0233471617102623, 0.006492226850241423, 0.024173308163881302, -0.08379942923784256, 0.035400889813899994, 0.011924143880605698, 0.06395914405584335, -0.025091668590903282, 0.23154862225055695, 0.04634566977620125, -0.03464064002037048, 0.019783668220043182, -0.09660620987415314, -0.08186054974794388, -0.18600694835186005, -0.11908779293298721, 0.21912004053592682, -0.09747152775526047, -0.010526714846491814, -0.015264575369656086, -0.12838749587535858, 0.061404332518577576, -0.07993568480014801, -0.016672959551215172, 0.007367889396846294, 0.06115908920764923, -0.00501360883936286, -0.009648752398788929, -0.11571478843688965, 0.022876223549246788, ...],
         ...
@@ -1318,12 +1318,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.2.ffn.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247369>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28884>
       [-0.0654396265745163, 0.10812345892190933, 0.04286130890250206, -0.2760961353778839, 0.08625604957342148, -0.2286910116672516, -0.04461458697915077, 7.275498937815428e-4, 0.10620112717151642, 0.10470309853553772, -0.08921228349208832, 0.07638224959373474, 0.1359548419713974, 0.011987983249127865, -0.13395175337791443, -0.012165425345301628, -0.02094808965921402, -0.24327068030834198, 0.19702652096748352, -0.11469811946153641, 0.06039329245686531, -0.0885312408208847, 0.03518642485141754, -0.032149139791727066, 0.051021404564380646, 0.05498753488063812, 0.08870009332895279, 0.06739293038845062, 0.0710294097661972, 0.13408461213111877, 0.029301894828677177, -0.00930361170321703, 0.025734776630997658, -0.24615506827831268, -0.08097236603498459, -0.06227843463420868, 0.005404133815318346, -0.11257304251194, -0.07373207062482834, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[3072][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246613>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28127>
       [
         [-0.02398330718278885, -0.20910729467868805, -0.029130421578884125, -0.014159053564071655, 0.12113775312900543, -0.02065293677151203, -0.11999223381280899, -0.269276887178421, 7.631823536939919e-4, 0.04650465399026871, -0.045628879219293594, -0.12281503528356552, 0.02982284128665924, 0.06332483142614365, -0.05124947428703308, 0.004213565960526466, 0.05839945375919342, 0.1387341022491455, 0.039438631385564804, -0.07732643932104111, 0.11901428550481796, -0.0635095089673996, 0.06668639183044434, 0.15541701018810272, -0.04893676936626434, -0.13186554610729218, 0.03706846386194229, 0.08605990558862686, -0.20225566625595093, -0.11350183933973312, 0.06946399807929993, -6.101589533500373e-4, -0.0847146287560463, -0.04157274588942528, 0.0049753207713365555, -0.015184903517365456, -0.16200494766235352, 0.04296805337071419, ...],
         ...
@@ -1333,12 +1333,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.3.self_attention.key" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246619>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28133>
       [-0.09291772544384003, -0.04217880591750145, -0.020356424152851105, 0.04034513235092163, -0.013874712400138378, -0.11893210560083389, -0.05924098193645477, -0.027365664020180702, 0.05266174301505089, 0.008417871780693531, -0.0861397385597229, -0.019344178959727287, -0.06396947801113129, 0.046350132673978806, 0.05676386505365372, -5.086865712655708e-6, 0.10372238606214523, -0.21678526699543, -0.09768351167440414, -0.009167345240712166, 0.08033648878335953, 0.0944061353802681, 0.08438227325677872, 0.22630733251571655, -0.14517657458782196, -0.007395234890282154, -0.13697558641433716, -0.059589944779872894, 0.1007838323712349, 0.006305344868451357, -0.16571001708507538, 0.011307205073535442, 0.07076525688171387, -0.007749190088361502, -0.03437885269522667, 0.11359181255102158, -0.0808584913611412, 0.004542372655123472, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246618>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28132>
       [
         [0.07191380113363266, -0.08377204835414886, 0.15178976953029633, 0.2953050136566162, 0.2969595789909363, 0.017495974898338318, -0.2548777759075165, -0.10065208375453949, 0.23874078691005707, -0.013963986188173294, 0.016722165048122406, 0.29725781083106995, -0.05463255196809769, -0.26017990708351135, 0.042508628219366074, 0.14374642074108124, 0.3041999638080597, 0.3108743131160736, -0.03671329841017723, -0.14828334748744965, -0.36135849356651306, 0.13315536081790924, 0.002669523935765028, 0.342965304851532, -0.00918323453515768, 0.5080976486206055, -0.33983874320983887, 0.34413501620292664, 0.34606099128723145, -0.09834522753953934, 0.09321682155132294, 0.027324317023158073, -0.029650583863258362, -0.07398593425750732, 0.28067755699157715, 0.086429163813591, -0.3594377636909485, ...],
         ...
@@ -1348,12 +1348,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.4.ffn.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247498>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29013>
       [-0.05897606164216995, 0.15732403099536896, -0.08401917666196823, -0.04356243461370468, -5.054371431469917e-4, -0.15412287414073944, -0.017296316102147102, 0.013370297849178314, 0.18167349696159363, 0.14976365864276886, -0.033649567514657974, -0.12340114265680313, 0.11543204635381699, 0.1179199367761612, -0.16670309007167816, 0.03197641670703888, -0.09725514054298401, -0.13734258711338043, 0.05221153423190117, -0.19777816534042358, -0.016869299113750458, -0.09240839630365372, -0.041709307581186295, 0.04953768476843834, -0.00948934257030487, -0.061544936150312424, 0.055073339492082596, 0.10132436454296112, 0.09503704309463501, 0.2767695188522339, -0.04178015887737274, -0.09199224412441254, -0.13981661200523376, -0.18259884417057037, -0.10355409979820251, -0.1465340107679367, 0.18813207745552063, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[3072][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246651>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28165>
       [
         [-0.016589239239692688, 0.033356476575136185, -0.025944791734218597, -0.06458347290754318, -0.008617261424660683, -0.06050972640514374, 0.026528408750891685, -0.018711822107434273, 0.06334453076124191, -0.07016438990831375, -0.040474455803632736, -0.08900412917137146, -0.05415213108062744, 0.00924048200249672, -0.09849966317415237, 0.017269760370254517, 0.03402997925877571, -0.0723804235458374, 0.06440147757530212, 0.11115777492523193, -0.04786305129528046, 0.013474693521857262, 0.18404416739940643, -0.037795290350914, -0.1344190388917923, -0.041169364005327225, -0.02169586904346943, -0.09167039394378662, -0.047637294977903366, -0.010682673193514347, -0.017419137060642242, -0.09429912269115448, 0.09434686601161957, 0.10471426695585251, -0.0364200696349144, -0.13448311388492584, ...],
         ...
@@ -1363,24 +1363,24 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.3.output_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247651>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29166>
       [0.02195732854306698, 0.035705193877220154, 0.04064951837062836, -0.025932105258107185, 0.014330854639410973, -0.039580412209033966, -0.1155749261379242, 0.028433658182621002, 0.030217133462429047, -0.007304288912564516, 0.002263169502839446, 0.048969969153404236, 0.05460219457745552, 0.004443574231117964, -0.07364215701818466, 0.029881520196795464, -0.01567690446972847, -0.01119413785636425, 0.010527174919843674, -0.014802615158259869, 0.0057569448836147785, -0.020488295704126358, 0.024373553693294525, -0.02502831257879734, 0.019044460728764534, 0.02883622609078884, 0.056766364723443985, 0.021289346739649773, 0.003697927575558424, 0.03079884685575962, 0.0382881686091423, 0.011968711391091347, -0.011580651625990868, -0.015300154685974121, -6.058550206944346e-4, -0.08841429650783539, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247648>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29163>
       [0.28222545981407166, 0.3131215572357178, 0.3034003973007202, 0.3393371105194092, 0.3154321610927582, 0.3309932053089142, 0.30264604091644287, 0.13720403611660004, 0.3059060573577881, 0.3251676857471466, 0.30764150619506836, 0.3226858973503113, 0.3249446153640747, 0.307298868894577, 0.28870701789855957, 0.3071806728839874, 0.2878659665584564, 0.3310546875, 0.29914483428001404, 0.2799876928329468, 0.350590318441391, 0.31099772453308105, 0.33301326632499695, 0.29779165983200073, 0.30957064032554626, 0.3072805106639862, 0.32713234424591064, 0.3132126033306122, 0.3168300688266754, 0.3154486119747162, 0.3116898834705353, 0.2880820631980896, 0.32278135418891907, 0.3193095326423645, 0.3212226927280426, ...]
     >
   },
   "decoder.blocks.9.self_attention.key" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246569>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28083>
       [-0.1255052387714386, 0.2206331193447113, 0.02155466005206108, -0.06883163750171661, -0.1582368165254593, -0.03266475349664688, 0.08761484920978546, -0.06262274831533432, 0.08110350370407104, -0.06443772464990616, -0.01988857425749302, -0.14905107021331787, 0.026666700839996338, 0.11045331507921219, 0.12034416198730469, -0.03482687100768089, -0.06882551312446594, -0.06385401636362076, 0.10434503108263016, -0.06925361603498459, 0.004499129019677639, 0.029036764055490494, 0.12643346190452576, 0.06261695176362991, 0.007506237365305424, -0.03166307136416435, 0.005090613849461079, 0.12981073558330536, 0.042653005570173264, -0.0895552709698677, -0.05183161050081253, -0.06341342628002167, 0.02652036026120186, -0.0019174101762473583, 0.06918130069971085, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246568>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28082>
       [
         [0.09414546191692352, -0.05349555239081383, -0.09394310414791107, 0.0680985152721405, 0.05514451488852501, 0.10338378697633743, -0.027529548853635788, 0.03738649934530258, 0.12017187476158142, 0.10639435052871704, -0.21103039383888245, 0.09546253830194473, 0.06053944304585457, 0.010116199031472206, 0.13734182715415955, -0.06583978235721588, -0.04140675812959671, 0.1631747931241989, -0.20215000212192535, 0.045266926288604736, 0.09429733455181122, 0.09323552995920181, -0.008121903985738754, 0.0823206678032875, 0.0871056392788887, -0.15799662470817566, 0.13381333649158478, -0.03152550011873245, -0.23124545812606812, 0.09309210628271103, -0.07485833019018173, 0.10970597714185715, 0.13201606273651123, 0.060820356011390686, ...],
         ...
@@ -1390,12 +1390,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.8.ffn.intermediate" => %{
     "bias" => #Nx.Tensor<
       f32[3072]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247327>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28842>
       [-0.11210184544324875, -0.12243035435676575, -0.18696080148220062, -0.09358573704957962, -0.07174187898635864, -0.09109503775835037, -0.22353070974349976, -0.23647837340831757, -0.009258066304028034, -0.07567327469587326, -0.020744603127241135, 0.015013153664767742, -0.05726751312613487, -0.037477463483810425, -0.02229940891265869, -0.14848092198371887, -0.038814179599285126, 0.02283428981900215, -0.17796941101551056, -0.03959912434220314, 0.026215065270662308, -0.024661418050527573, -0.16912145912647247, -0.022491857409477234, -0.0367843434214592, -0.03149944916367531, -0.07467391341924667, -0.23281385004520416, -0.15074151754379272, -0.09347876906394958, 0.043657492846250534, -0.10828288644552231, 0.03156153857707977, -0.14233221113681793, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][3072]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246599>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28113>
       [
         [0.07281597703695297, 0.23076365888118744, 0.056254733353853226, -0.007391960825771093, 0.37602195143699646, 0.026575006544589996, -0.0559421107172966, 0.24213534593582153, 0.17022763192653656, 0.008780462667346, 0.008517129346728325, -0.004474610555917025, 0.08918315172195435, -0.0734836533665657, -0.2731582224369049, -0.0711795762181282, -0.09748861193656921, 0.05456811189651489, -0.017072979360818863, 0.02093295007944107, -0.0573551245033741, -0.2868148684501648, -0.0835830420255661, -0.07690536230802536, -0.01711919531226158, -0.1358148157596588, -0.09262753278017044, -0.16049614548683167, 0.05776229128241539, -0.10948118567466736, -0.009235521778464317, -0.19156120717525482, -0.026457132771611214, ...],
         ...
@@ -1405,12 +1405,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.9.self_attention.query" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246662>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28176>
       [0.05707442760467529, 0.035462647676467896, -0.0991213247179985, 0.13527709245681763, -0.028422338888049126, -0.025333665311336517, 0.009800232946872711, 0.0038071630988270044, 0.2587926983833313, -0.2757236957550049, -0.20594574511051178, -0.10678356885910034, 0.07663259655237198, 0.10082900524139404, 0.09312675893306732, 0.02456960454583168, -0.02361578680574894, 0.027035534381866455, -0.17550106346607208, -0.019421570003032684, 0.17456819117069244, -0.27237164974212646, -0.06578843295574188, 0.7469214200973511, -0.16401293873786926, -0.040414296090602875, 0.0813840925693512, 0.22788934409618378, 0.0898127555847168, -0.12558601796627045, -0.10621572285890579, -0.16889676451683044, 0.37665021419525146, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246661>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28175>
       [
         [0.07092145085334778, -0.1273377686738968, 0.18363283574581146, 0.0030052068177610636, -0.11931692808866501, 0.09142619371414185, 0.09066392481327057, -0.11962020397186279, -0.11546863615512848, -0.2486332207918167, -0.01928895153105259, -0.13211512565612793, 0.012719957157969475, -0.058824148029088974, -0.024515893310308456, -0.06520464271306992, -0.1823996901512146, 0.08205809444189072, -0.14308585226535797, -0.02228454314172268, 0.07376360148191452, 0.1657320261001587, 0.12012247741222382, -0.05113732069730759, 0.09645874798297882, -0.05014803633093834, 0.16555407643318176, -0.09963696449995041, -0.04661593958735466, -0.04942096397280693, 0.2155635803937912, -0.0188114196062088, ...],
         ...
@@ -1420,12 +1420,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.6.self_attention.key" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246634>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28148>
       [-0.1274530589580536, -0.12059053033590317, -0.007807011716067791, 0.10612983256578445, -0.15291491150856018, 0.02204704098403454, -0.018509021028876305, -0.052053213119506836, -0.12142118811607361, 0.09243933856487274, -0.07746855169534683, -0.2270767092704773, 0.06773963570594788, 0.20025405287742615, 0.08527366816997528, 0.17828650772571564, -0.23929782211780548, 0.08052106946706772, -0.04288453236222267, -0.10904651135206223, -0.07623006403446198, 0.12980422377586365, -0.022937437519431114, 0.1890099197626114, 0.033789169043302536, -0.01818382926285267, -0.09066783636808395, 0.01310903113335371, -0.032641101628541946, 0.022848786786198616, -0.04326312616467476, -0.10271038115024567, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246633>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28147>
       [
         [0.23245984315872192, -0.051963526755571365, 0.03376476839184761, -0.17533107101917267, -0.0015645339153707027, -0.21227991580963135, -0.20261846482753754, 0.2514711320400238, 0.11193699389696121, 0.07263650000095367, 0.1105310469865799, 0.12566789984703064, -0.029312685132026672, -0.18712376058101654, -0.18661442399024963, -0.20233362913131714, -0.25359874963760376, -0.06487743556499481, -0.08297345787286758, 0.03883111849427223, 0.027809424325823784, 0.05575752630829811, 0.0707707554101944, -0.04197012260556221, -8.136677788570523e-4, 0.01103792805224657, -0.23597127199172974, 0.043430693447589874, 0.005747525487095118, -0.2847156822681427, -0.007437974214553833, ...],
         ...
@@ -1435,24 +1435,24 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.10.self_attention_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247672>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29187>
       [0.030510496348142624, 0.006001842673867941, 0.048768121749162674, 0.01165001466870308, 0.005879620555788279, 0.010598479770123959, -0.0672491267323494, 0.025556962937116623, 0.013904724270105362, 6.435069954022765e-4, 0.007581857033073902, 0.012246792204678059, 0.026725852862000465, 0.02789079211652279, 0.04797949641942978, -0.004149633459746838, 0.0409918837249279, 0.034725841134786606, -0.0010700526181608438, 0.01325390674173832, 0.03363116458058357, 0.023286549374461174, 0.02105352096259594, 0.025586696341633797, 0.020323842763900757, 0.006301491055637598, -0.0016431305557489395, 0.015145816840231419, 0.02847486175596714, 0.006544305011630058, 0.010149458423256874, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247669>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29184>
       [0.426937460899353, 0.3798982501029968, 0.38925623893737793, 0.36285722255706787, 0.3721630275249481, 0.3487066626548767, 0.5020099878311157, 0.35842880606651306, 0.3820701539516449, 0.32065778970718384, 0.4148608148097992, 0.35868051648139954, 0.3574266731739044, 0.3837886452674866, 0.44628968834877014, 0.397741436958313, 0.3976704776287079, 0.3701581656932831, 0.3779294490814209, 0.39748460054397583, 0.3310501277446747, 0.3544250428676605, 0.38002175092697144, 0.41307657957077026, 0.379832923412323, 0.3876934051513672, 0.4171038269996643, 0.3594702482223511, 0.36118414998054504, 0.36034277081489563, ...]
     >
   },
   "decoder.blocks.4.ffn.intermediate" => %{
     "bias" => #Nx.Tensor<
       f32[3072]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247183>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28698>
       [-0.06427578628063202, -0.29860806465148926, -0.11274097114801407, -0.1695093810558319, -0.029283864423632622, 0.015383693389594555, -0.059798579663038254, -0.21982493996620178, -0.11109853535890579, -0.025041809305548668, -0.17913004755973816, -0.04023921862244606, -0.15255160629749298, -0.14760905504226685, -0.05613582208752632, -0.08194784075021744, -0.08518823236227036, -0.10574408620595932, -0.09536109864711761, 0.04650188237428665, -0.24487002193927765, -0.10550493001937866, -0.07493823766708374, 0.3118955194950104, -0.015493771992623806, 0.0036832429468631744, -0.0269177183508873, -0.16599039733409882, -0.09511981904506683, 0.006142540369182825, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][3072]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246563>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28077>
       [
         [-4.077995545230806e-4, -0.1200379952788353, -0.012310190126299858, -0.24376054108142853, 0.1328510195016861, 0.13179974257946014, 0.02635245770215988, 0.057356610894203186, -0.06828179955482483, -0.01686907559633255, 0.049044106155633926, -0.3784016966819763, -0.03531080484390259, 0.43567171692848206, 0.02976839430630207, -0.06014109030365944, 0.18706151843070984, -0.050236742943525314, 0.11668948084115982, 0.05957753583788872, -0.14054043591022491, -0.013522407039999962, -0.06838822364807129, 0.06603340059518814, 0.1704917997121811, -0.04796731844544411, 0.13489077985286713, 0.09338540583848953, -0.4719774127006531, ...],
         ...
@@ -1462,12 +1462,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.0.self_attention.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247621>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29136>
       [0.1502915918827057, -0.15426146984100342, -0.1466306895017624, -0.09912773221731186, 0.03380264714360237, -0.03444754704833031, -0.0706353709101677, -0.0936073362827301, 0.08110949397087097, 0.031160973012447357, -0.19926859438419342, -0.037245020270347595, 0.0030495061073452234, 0.04989158734679222, -0.0535597987473011, 0.0374077744781971, -0.19088934361934662, -0.08153925091028214, 0.0491158701479435, 0.14187365770339966, -0.11211564391851425, -0.09672139585018158, 0.05310625955462456, -0.21880236268043518, 0.09357757121324539, 0.012167288921773434, 0.012163301929831505, 0.08575751632452011, 0.04579753801226616, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246678>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28192>
       [
         [0.3127181828022003, -0.18741346895694733, 0.0980248749256134, -0.030339280143380165, -0.021640362218022346, -0.021060511469841003, -0.17938977479934692, -0.3298454284667969, 0.29462477564811707, 0.016695095226168633, -0.17451533675193787, -0.01856379583477974, 0.015662474557757378, 0.019278528168797493, 0.007864857092499733, 0.19694651663303375, -0.10614901781082153, -0.013053175993263721, 0.014888686127960682, 0.39647337794303894, -0.022225921973586082, 0.03043077513575554, -0.04131042957305908, -0.0028614092152565718, -0.04620683565735817, -0.0031064024660736322, -0.24714353680610657, -0.020426509901881218, ...],
         ...
@@ -1477,12 +1477,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.4.self_attention.query" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246555>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28069>
       [-0.030168335884809494, 0.10533975064754486, 0.15787462890148163, 0.024759536609053612, -0.006538494024425745, 0.060618676245212555, 0.08839995414018631, -0.13495968282222748, -0.020193777978420258, 0.12939752638339996, -0.08156191557645798, 0.34852737188339233, -0.25281667709350586, 0.0726567953824997, -0.00879716593772173, 0.46894973516464233, -0.20609457790851593, 0.09965331107378006, 0.16798031330108643, 0.21133244037628174, 0.16016334295272827, 0.023227756842970848, 0.2617943286895752, -0.2517806887626648, -0.27660995721817017, -0.010905023664236069, 0.04526042193174362, -0.01339393388479948, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246553>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28067>
       [
         [0.05423329025506973, 0.10368772596120834, -0.12026900798082352, 0.2241293340921402, 0.07213354855775833, -0.10475268959999084, -0.098123699426651, -0.03631935641169548, 0.3400250971317291, 0.11668488383293152, 0.3846721351146698, -0.04552015662193298, 0.03707210719585419, 0.060659412294626236, -0.13420982658863068, -0.06594616919755936, 0.17946170270442963, -0.10135768353939056, -8.781739161349833e-4, 0.03128969296813011, 0.10800420492887497, -0.20376046001911163, 0.036751069128513336, -0.06389692425727844, -0.15011754631996155, 0.2712489664554596, 0.14473587274551392, ...],
         ...
@@ -1492,24 +1492,24 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.8.output_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247474>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28989>
       [0.026478445157408714, 0.03058476373553276, 0.03277738764882088, 0.027175817638635635, -0.03420574590563774, -0.04291548207402229, -0.02005288004875183, 0.06033172458410263, 0.042357590049505234, 0.015196949243545532, -0.006372882053256035, 0.014285472221672535, 0.02985285595059395, 0.006489758379757404, -0.03699921444058418, 0.02677823044359684, -0.01978689804673195, 0.029895320534706116, 0.001117934938520193, -0.03488800302147865, 0.03796650841832161, -0.028332462534308434, -0.013404340483248234, 0.014422249048948288, -0.010553745552897453, 0.002345289569348097, -0.02829832397401333, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247471>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28986>
       [0.256835401058197, 0.2554992139339447, 0.26428794860839844, 0.2509766221046448, 0.25293001532554626, 0.260743111371994, 0.3623034656047821, 0.2026355266571045, 0.2724631726741791, 0.23681232333183289, 0.26465314626693726, 0.2565948963165283, 0.2509452700614929, 0.26839280128479004, 0.28613126277923584, 0.25516241788864136, 0.26855340600013733, 0.2548842430114746, 0.25679123401641846, 0.25487300753593445, 0.23641103506088257, 0.2568313181400299, 0.2627745568752289, 0.25056999921798706, 0.25682833790779114, 0.2529260516166687, ...]
     >
   },
   "decoder.blocks.6.self_attention.value" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246659>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28173>
       [0.008094793185591698, -0.012891687452793121, 0.012476509436964989, 0.021194303408265114, 0.04015762358903885, -0.02663881704211235, -0.023752382025122643, -0.001071950071491301, 0.03309759870171547, 0.010285280644893646, -0.006889031268656254, -0.1257532835006714, 9.324409766122699e-4, 0.01171852182596922, -0.043873947113752365, -0.008764470927417278, -0.07170451432466507, -0.012096060439944267, 0.011502828449010849, 0.008124460466206074, -0.015051798895001411, 0.0037668568547815084, 0.028139527887105942, -0.04549719765782356, 0.01731819286942482, -0.04555899649858475, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246658>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28172>
       [
         [-0.018813427537679672, 0.19313490390777588, 0.05417853593826294, 0.023874085396528244, -0.1469319462776184, -0.03817090019583702, -0.08952698111534119, 0.053204476833343506, 0.03557916358113289, -0.07985074818134308, -0.001789747504517436, -0.14399871230125427, 0.18803372979164124, 0.01738598197698593, 0.038275156170129776, 0.03143403306603432, -0.04185841605067253, 0.07224993407726288, 0.2724269926548004, 0.02323106862604618, 0.04056814685463905, 0.05048747733235359, 0.1290781944990158, -0.13238899409770966, -0.04559126868844032, ...],
         ...
@@ -1519,12 +1519,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.3.ffn.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247666>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29181>
       [-0.0232847947627306, 0.10563581436872482, -0.0531383752822876, -0.09454120695590973, -0.015325434505939484, -0.08506536483764648, -0.07138027250766754, 0.05388682335615158, 0.14111925661563873, 0.1348050981760025, -0.07036365568637848, -0.0036540981382131577, 0.041501376777887344, 0.07138317078351974, -0.1433209776878357, 0.033328648656606674, -0.025909310206770897, -0.15808121860027313, 0.058489684015512466, -0.1005123108625412, 0.12790188193321228, -0.05867855250835419, 0.05914581939578056, 0.037388164550065994, 0.04343689605593681, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[3072][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246692>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28206>
       [
         [0.07660453766584396, 0.005029582418501377, -0.08185179531574249, -0.04126457870006561, 0.06943788379430771, -0.04354039579629898, 0.13279001414775848, 0.057913508266210556, -0.04257570207118988, -0.0920814573764801, -0.2037155032157898, -0.0021956718992441893, 0.06303318589925766, 0.0779477059841156, -0.028110455721616745, -0.22464191913604736, 0.08300850540399551, -0.037264134734869, -0.26715990900993347, 0.09652064740657806, 0.0018457196420058608, -7.214118377305567e-4, -0.09362386912107468, 0.05358770489692688, ...],
         ...
@@ -1534,12 +1534,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.8.self_attention.query" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246602>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28116>
       [-0.016666432842612267, -0.3908640146255493, -0.14189036190509796, -0.09550853818655014, 0.028818266466259956, -0.03564365208148956, 0.39664602279663086, -0.1003335490822792, -0.12153777480125427, 0.25413286685943604, -0.25467512011528015, 0.2728674113750458, -0.14818769693374634, 0.03464064374566078, -0.01881992444396019, -0.11672705411911011, 0.26542341709136963, -0.31608355045318604, -0.06016623601317406, -0.32036855816841125, 0.10017024725675583, 0.12484857439994812, -0.18118615448474884, -0.22473324835300446, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246601>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28115>
       [
         [0.04895172640681267, -0.13535946607589722, 0.08867701888084412, 0.03470441326498985, 0.16805638372898102, -0.04044034704566002, 0.02029840461909771, 0.12461696565151215, 0.038629818707704544, 0.0026324870996177197, 0.1111854836344719, -0.10957732796669006, 0.008841103874146938, 0.22030411660671234, 0.1880180835723877, -0.1760788857936859, 0.11645969748497009, 0.024209320545196533, 0.0647314041852951, 0.06860420852899551, -0.12365900725126266, -0.22124595940113068, -0.0675320103764534, ...],
         ...
@@ -1549,12 +1549,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.9.ffn.intermediate" => %{
     "bias" => #Nx.Tensor<
       f32[3072]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247297>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28812>
       [-0.15674668550491333, -0.05856061354279518, -0.1862010508775711, -0.05574220418930054, 0.05308351293206215, -0.23877263069152832, -0.1725977510213852, -0.16667550802230835, -0.1204790323972702, 0.10092921555042267, -0.1463088095188141, -0.010244892910122871, -0.024020275101065636, -0.020772719755768776, -0.015557598322629929, -0.05010974407196045, -0.18073450028896332, 0.015407576225697994, -0.10474839061498642, -0.09000752866268158, -0.06217072531580925, -0.024300342425704002, -0.17624199390411377, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][3072]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246591>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28105>
       [
         [-0.1263384222984314, 0.10032892227172852, 0.04315217211842537, -0.34024444222450256, 0.03990277275443077, -0.1816384494304657, -0.08722347021102905, -0.09134645760059357, 0.08901876211166382, 0.2486005276441574, 0.14004628360271454, -0.02703682705760002, -0.0864061713218689, -0.011990259401500225, -0.07122871279716492, 0.14166268706321716, 0.13745108246803284, 0.09496646374464035, 0.19813163578510284, -0.06252028793096542, -0.08641546964645386, -0.19076146185398102, ...],
         ...
@@ -1564,12 +1564,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.11.self_attention.query" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246677>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28191>
       [-0.22222381830215454, 0.054906319826841354, 0.03307081758975983, 0.1580498218536377, 0.0302886962890625, -0.2349749058485031, -0.3064831495285034, -0.11609630286693573, 0.11942905932664871, -0.18294057250022888, 0.09135612845420837, 0.1770371049642563, -0.044169217348098755, -0.23199965059757233, -0.2659616470336914, -0.06414084881544113, 0.17821991443634033, 0.23306676745414734, 0.02620626427233219, -0.10767792165279388, 0.028602538630366325, 0.07664165645837784, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246676>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28190>
       [
         [-0.2175447642803192, 0.060769811272621155, -0.06370636075735092, -0.010534803383052349, 0.03727848827838898, 0.038609497249126434, 0.0018609011312946677, 0.07256438583135605, -0.016396360471844673, -0.06539854407310486, 0.13125160336494446, -0.14517498016357422, 0.020752470940351486, 0.06105264276266098, 0.10187797248363495, -0.09049602597951889, 0.10861889272928238, 0.03869340196251869, 0.1436213254928589, 0.0036275412421673536, -0.13537921011447906, ...],
         ...
@@ -1579,12 +1579,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.1.self_attention.value" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246640>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28154>
       [0.023383773863315582, 0.019925691187381744, -0.010859258472919464, 0.6510787010192871, -0.007127456832677126, 3.0829233583062887e-4, -0.0018755021737888455, 0.06549560278654099, -0.024767201393842697, 0.009818159975111485, 0.024395234882831573, 0.003666318953037262, 0.027201134711503983, -0.04317772388458252, -0.04861711338162422, 0.29467853903770447, 0.021457983180880547, 0.004829582292586565, -0.006358654238283634, 0.005354858003556728, -0.010436966083943844, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246639>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28153>
       [
         [-0.009291327558457851, 0.030902646481990814, 0.077150858938694, 0.03817647323012352, -0.11329539120197296, -0.028751656413078308, -0.11431775987148285, 0.0115272281691432, -0.14699126780033112, -0.08838532119989395, -0.040005024522542953, -0.05282926931977272, -0.009505202062427998, -0.11530014872550964, 0.051036346703767776, -0.1743350625038147, -0.15030527114868164, -0.02026422880589962, -3.135435690637678e-4, 0.07486337423324585, ...],
         ...
@@ -1594,12 +1594,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.11.self_attention.value" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246584>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28098>
       [0.05557013303041458, -0.023522645235061646, 0.020958656445145607, 0.023626001551747322, -0.012116808444261551, 0.10495120286941528, 0.0023480362724512815, -0.02615499310195446, 0.015563438646495342, -0.009612268768250942, -0.00985608622431755, -0.058930542320013046, -0.09239070862531662, 0.041288528591394424, 0.06829941272735596, -0.013641005381941795, 0.04428235813975334, 0.016503283753991127, -0.029918698593974113, -0.011992884799838066, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246583>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28097>
       [
         [0.09672704339027405, 0.02168218418955803, -0.04748263582587242, 0.16117015480995178, -0.09717914462089539, 0.07982426881790161, -0.025253381580114365, -0.07965120673179626, 0.10104228556156158, -0.03366006910800934, 0.04504484683275223, -0.14655034244060516, -0.04964844509959221, -0.021307766437530518, 0.10284372419118881, -0.035687148571014404, 0.1570502370595932, -0.09166368842124939, -0.009216838516294956, ...],
         ...
@@ -1609,7 +1609,7 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "embedder.token_embedding" => %{
     "kernel" => #Nx.Tensor<
       f32[50257][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246666>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28180>
       [
         [-0.11010301113128662, -0.03926672413945198, 0.03310750797390938, 0.13382644951343536, -0.04847569391131401, -0.07891767472028732, -0.2397741675376892, -0.08947388082742691, 0.02525496669113636, -0.10739682614803314, -0.18114538490772247, -0.06715374439954758, 0.07391443103551865, -0.016131391748785973, 0.011662482284009457, 0.12449593096971512, -0.001963014481589198, -0.08150256425142288, 0.03377755731344223, ...],
         ...
@@ -1619,24 +1619,24 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.4.output_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247159>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28674>
       [0.03581799939274788, 0.0013955077156424522, 0.028343360871076584, 0.008547329343855381, 0.0017066916916519403, -0.015421940945088863, -0.10036948323249817, 0.007698511239141226, 0.02324959821999073, 0.009619422256946564, -0.007669593673199415, 0.025091584771871567, 0.04427342116832733, -0.020369691774249077, -0.05964217334985733, 0.019331300631165504, -0.01223753858357668, -0.01770605705678463, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247156>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28671>
       [0.2568347752094269, 0.2607281506061554, 0.27832046151161194, 0.28114670515060425, 0.28516432642936707, 0.2770099639892578, 0.27500423789024353, 0.1547410935163498, 0.283526748418808, 0.28981050848960876, 0.2724590003490448, 0.27831974625587463, 0.28609699010849, 0.27203458547592163, 0.2650811970233917, 0.2724769115447998, 0.26392078399658203, ...]
     >
   },
   "decoder.blocks.10.self_attention.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247303>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28818>
       [-0.012379296123981476, 0.014348221942782402, -0.004452732391655445, -0.04507273808121681, -0.012405290268361568, 0.08091054856777191, 0.15559299290180206, 0.05403776094317436, 0.0675089880824089, 0.030687397345900536, 0.3024734854698181, -0.009818164631724358, 0.08117414265871048, -0.1720537543296814, 0.05229543149471283, 0.13546159863471985, -0.21003645658493042, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246592>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28106>
       [
         [-0.007740591652691364, -0.5188016891479492, 0.07828357070684433, 0.16056594252586365, -0.345084011554718, 0.19546931982040405, -0.03769585117697716, 0.42103129625320435, 0.25166407227516174, -0.2463306337594986, 0.11552479863166809, -0.05760181322693825, 0.1186075359582901, -0.20914454758167267, -0.2030973732471466, -0.22620870172977448, ...],
         ...
@@ -1646,24 +1646,24 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.0.output_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247441>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28956>
       [0.04247827082872391, 0.03262673318386078, 0.004488067235797644, 0.015759378671646118, 0.005960179027169943, -0.026806578040122986, 0.01171385683119297, 0.05137127265334129, 0.013217959553003311, -0.004240347538143396, -0.011667933315038681, 0.0021937862038612366, -0.013367529958486557, -0.002064076717942953, -0.026502149179577827, 0.01191623043268919, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247438>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28953>
       [0.13096605241298676, 0.20933687686920166, 0.20659242570400238, 1.254226803779602, 1.2637722492218018, 1.2695313692092896, 0.0935104489326477, 0.07934456318616867, 0.2260090857744217, 1.3007793426513672, 0.23237723112106323, 1.1525323390960693, 1.2761300802230835, 1.26953125, 0.7215696573257446, ...]
     >
   },
   "decoder.blocks.6.ffn.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247261>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28776>
       [-0.032783910632133484, 0.10676194727420807, -0.020738141611218452, 0.032967459410429, -0.015854258090257645, -0.11419513821601868, 0.018057847395539284, -0.058376479893922806, 0.19097566604614258, 0.11427830904722214, -0.06308886408805847, -0.047898005694150925, 0.17753615975379944, 0.06485942751169205, -0.11543454974889755, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[3072][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246585>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28099>
       [
         [0.0969826877117157, -0.09540646523237228, 0.06500814855098724, 0.09873990714550018, -0.10905405879020691, 0.08737366646528244, 0.013654707930982113, -0.014028162695467472, 0.0809120461344719, -0.014392320066690445, -0.12919580936431885, -0.08840550482273102, 0.044951293617486954, -0.10458621382713318, ...],
         ...
@@ -1673,12 +1673,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.7.self_attention.query" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246562>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28076>
       [0.37788376212120056, 0.07670742273330688, 0.0018559127347543836, -0.10767138749361038, -0.008797960355877876, -0.05189952999353409, -3.922691976185888e-4, 0.47561389207839966, 0.07581450045108795, -0.08861846476793289, 0.08389809727668762, 0.01737620122730732, 0.046795982867479324, 0.3026520609855652, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246561>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28075>
       [
         [0.09505656361579895, 0.2815342843532562, 0.07592008262872696, 0.05813293159008026, -0.08546139299869537, -0.12361529469490051, -0.1401478499174118, 0.058990344405174255, -0.2838239073753357, 0.11386465281248093, -0.1583637148141861, -0.050222549587488174, 0.10052284598350525, ...],
         ...
@@ -1688,12 +1688,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.2.self_attention.key" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246655>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28169>
       [-0.1164763867855072, -0.10782725363969803, -0.0508851557970047, 0.006003555841743946, 0.08386743813753128, 0.16977491974830627, 0.07476542890071869, -0.03264027461409569, -0.02714858204126358, 0.025255294516682625, 0.07389767467975616, 0.14429283142089844, 0.056997258216142654, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246654>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28168>
       [
         [-0.009812610223889351, -0.17040055990219116, -0.034252941608428955, -0.2796790301799774, -0.015102369710803032, -0.04087914526462555, 0.007516289129853249, -0.021858975291252136, 0.020004870370030403, -0.01545007899403572, -0.008888366632163525, 0.013375785201787949, ...],
         ...
@@ -1703,36 +1703,36 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.2.output_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247435>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28950>
       [0.043191004544496536, 0.0245783943682909, 0.004377962090075016, -0.02795151062309742, 0.022012922912836075, -0.06287944316864014, -0.07565537840127945, 0.03899669274687767, 0.022937333211302757, -1.1479156455607153e-5, -0.014939102344214916, 0.022962642833590508, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247432>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28947>
       [0.26464512944221497, 0.30566200613975525, 0.28360238671302795, 0.31934303045272827, 0.30372193455696106, 0.3557177186012268, 0.2701093852519989, 0.12454181909561157, 0.2917430102825165, 0.32704973220825195, 0.28982165455818176, ...]
     >
   },
   "decoder.blocks.7.self_attention_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247492>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29007>
       [0.03026599995791912, 0.020864378660917282, 0.0317896232008934, 0.01288677379488945, 0.0020049354061484337, 0.007990947924554348, -0.026534350588917732, 0.02696160413324833, 0.011594080366194248, 0.013581011444330215, 0.009942992590367794, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247489>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29004>
       [0.3551267981529236, 0.3564145565032959, 0.3758927881717682, 0.3657114505767822, 0.3599787950515747, 0.34165623784065247, 0.3870469033718109, 0.2665950655937195, 0.36816349625587463, 0.352022260427475, ...]
     >
   },
   "decoder.blocks.10.self_attention.query" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246689>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28203>
       [-0.03012319840490818, 0.13602332770824432, -0.3841572105884552, 0.33693796396255493, -0.17340926826000214, -0.15652933716773987, 0.3452204167842865, -0.013852311298251152, -0.13725152611732483, -0.19260846078395844, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246688>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28202>
       [
         [0.21999560296535492, 0.2637237310409546, 0.04224083572626114, -0.06340529769659042, 0.12883184850215912, -0.01630588248372078, 0.10259885340929031, -0.038481637835502625, -0.07162255793809891, ...],
         ...
@@ -1742,24 +1742,24 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.8.self_attention_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247597>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29112>
       [0.026580655947327614, 0.014082363806664944, 0.03609975427389145, 0.014848507009446621, -0.004328620154410601, 0.009019272401928902, -0.0453052818775177, 0.022013459354639053, 0.006949983071535826, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247594>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29109>
       [0.3517552316188812, 0.3381420969963074, 0.35644039511680603, 0.3355329632759094, 0.33988144993782043, 0.3217993676662445, 0.3803149163722992, 0.28222477436065674, ...]
     >
   },
   "decoder.blocks.11.ffn.intermediate" => %{
     "bias" => #Nx.Tensor<
       f32[3072]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247549>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29064>
       [-0.038226597011089325, -0.1637330800294876, 0.28211548924446106, -0.10262239724397659, 0.024077357724308968, -0.0832146555185318, -0.10605514049530029, -0.13395379483699799, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][3072]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246667>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28181>
       [
         [-0.14395315945148468, 0.21767818927764893, -0.08208920806646347, -0.08232471346855164, -0.0785398781299591, 0.2741723358631134, -0.1334928274154663, ...],
         ...
@@ -1769,12 +1769,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.8.self_attention.value" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246576>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28090>
       [-0.009447249583899975, -0.0026832041330635548, 0.03221642225980759, 0.012611282989382744, -0.0379859022796154, -0.11279989778995514, -0.008031549863517284, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246575>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28089>
       [
         [0.10462091118097305, 0.03825182095170021, -0.15017639100551605, 0.07689894735813141, -0.060953639447689056, -0.017569424584507942, ...],
         ...
@@ -1784,12 +1784,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.10.ffn.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247345>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28860>
       [-0.03814335912466049, 0.025599177926778793, -0.20103679597377777, 0.14348195493221283, 0.17296327650547028, -0.1044880598783493, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[3072][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246603>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28117>
       [
         [0.05263395607471466, 0.2036895900964737, -0.22806401550769806, 0.0914945974946022, 0.10977628082036972, ...],
         ...
@@ -1799,12 +1799,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.4.self_attention.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247504>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.29019>
       [-0.13346901535987854, -0.12023670226335526, -0.01996723935008049, -0.017336692661046982, 0.06325311213731766, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246652>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28166>
       [
         [0.12204195559024811, -9.472257806919515e-4, 0.020139841362833977, -0.041395459324121475, ...],
         ...
@@ -1814,12 +1814,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.5.self_attention.query" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246566>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28080>
       [-0.04358132556080818, 0.029470941051840782, 0.08498750627040863, -0.09758780896663666, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246565>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28079>
       [
         [0.18605762720108032, -0.19759854674339294, 0.0348566509783268, ...],
         ...
@@ -1829,14 +1829,14 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "dense_72" => %{
     "bias" => #Nx.Tensor<
       f32[2]
-      EXLA.Backend<host:0, 0.1354661623.2441740313.250306>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.71440>
       [0.0, 0.0]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][2]
-      EXLA.Backend<host:0, 0.1354661623.2442002456.117732>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.138187>
       [
-        [0.019110053777694702, 0.049950480461120605],
+        [-0.0737714171409607, 0.009708918631076813],
         ...
       ]
     >
@@ -1844,12 +1844,12 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.0.self_attention.value" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246665>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28179>
       [-0.0034378955606371164, 0.006358778104186058, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[768][768]
-      EXLA.Backend<host:0, 0.1354661623.2441740312.246664>
+      EXLA.Backend<host:0, 0.3156742617.1058668568.28178>
       [
         [0.14213383197784424, ...],
         ...
@@ -1859,19 +1859,19 @@ trainable_params = Axon.ModelState.trainable_parameters(class_params)
   "decoder.blocks.2.self_attention_norm" => %{
     "beta" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247099>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28614>
       [0.004916004370898008, ...]
     >,
     "gamma" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247096>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28611>
       [...]
     >
   },
   "decoder.blocks.1.ffn.output" => %{
     "bias" => #Nx.Tensor<
       f32[768]
-      EXLA.Backend<host:0, 0.1354661623.2441740314.247087>
+      EXLA.Backend<host:0, 0.3156742617.1058668574.28602>
       [...]
     >,
     ...
@@ -2055,21 +2055,21 @@ result = predict_fn.(classifier_params, input)
 %{
   "attention_mask" => #Nx.Tensor<
     u32[1][4]
-    EXLA.Backend<host:0, 0.1354661623.2442002456.120883>
+    EXLA.Backend<host:0, 0.3156742617.1058668568.139238>
     [
       [1, 1, 1, 1]
     ]
   >,
   "input_ids" => #Nx.Tensor<
     u32[1][4]
-    EXLA.Backend<host:0, 0.1354661623.2442002456.120882>
+    EXLA.Backend<host:0, 0.3156742617.1058668568.139237>
     [
       [5211, 345, 423, 640]
     ]
   >,
   "length" => #Nx.Tensor<
     s32[1]
-    EXLA.Backend<host:0, 0.1354661623.2441740313.251575>
+    EXLA.Backend<host:0, 0.3156742617.1058668574.71908>
     [4]
   >
 }
@@ -2080,13 +2080,13 @@ result = predict_fn.(classifier_params, input)
 ```
 #Nx.Tensor<
   f32[1][4][2]
-  EXLA.Backend<host:0, 0.1354661623.2442002456.121929>
+  EXLA.Backend<host:0, 0.3156742617.1058668568.140291>
   [
     [
-      [-2.683079242706299, 5.528141021728516],
-      [-18.115114212036133, 17.54631805419922],
-      [-14.833165168762207, 12.536860466003418],
-      [-9.652190208435059, 10.497628211975098]
+      [-5.726808071136475, 7.102663516998291],
+      [-26.23585319519043, 32.66390609741211],
+      [-19.506704330444336, 28.507247924804688],
+      [-15.557110786437988, 21.21015167236328]
     ]
   ]
 >
@@ -2106,9 +2106,80 @@ result[[.., -1]]
 ```
 #Nx.Tensor<
   f32[1][2]
-  EXLA.Backend<host:0, 0.1354661623.2442002456.121935>
+  EXLA.Backend<host:0, 0.3156742617.1058668568.140295>
   [
-    [-9.652190208435059, 10.497628211975098]
+    [-15.557110786437988, 21.21015167236328]
   ]
 >
+```
+
+## 6.6 Calculating the classification loss and accuracy
+
+```elixir
+result[[.., -1]]
+|> Axon.Activations.softmax(axis: -1) 
+|> Nx.argmax(axis: -1)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s32[1]
+  EXLA.Backend<host:0, 0.3156742617.1058668568.140320>
+  [1]
+>
+```
+
+Using the softmax function here is optional because the largest outputs
+directly correspond to the highest probability scores.
+
+```elixir
+Axon.Losses.categorical_cross_entropy(Nx.tensor([[0]]), result[[.., -1, ..]], reduction: :mean,
+    from_logits: true,
+    sparse: true)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32
+  EXLA.Backend<host:0, 0.3156742617.1058668568.140454>
+  36.76726150512695
+>
+```
+
+```elixir
+loss_fn = fn y_true, y_pred ->
+  Axon.Losses.categorical_cross_entropy(y_true, y_pred[[.., -1]],
+    reduction: :mean,
+    from_logits: true,
+    sparse: true
+  )
+end
+
+{loss_fn.(Nx.tensor([0]), result), loss_fn.(Nx.tensor([1]), result)}
+#optimizer = Polaris.Optimizers.adamw(learning_rate: 0.004)
+
+#trained_model_state =
+  #model
+  #|> Axon.Loop.trainer(loss_fn, optimizer)
+  #|> Axon.Loop.validate(model, validation_dataset)
+  #|> Axon.Loop.run(training_dataset, %{}, epochs: 100, compiler: EXLA)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{#Nx.Tensor<
+   f32
+   EXLA.Backend<host:0, 0.3156742617.1058668568.140709>
+   36.76726150512695
+ >,
+ #Nx.Tensor<
+   f32
+   EXLA.Backend<host:0, 0.3156742617.1058668568.140725>
+   -0.0
+ >}
 ```
