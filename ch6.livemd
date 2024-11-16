@@ -2398,3 +2398,106 @@ Batch: 32, GPT Classifier accuracy: 0.5037879
   }
 }
 ```
+
+<!-- livebook:{"branch_parent_index":6} -->
+
+## 6.8 Using the LLM as a spam classifier
+
+```elixir
+File.cd(__DIR__)
+{:ok, model_bin} = File.read("classifier_gpt.axon") 
+
+classifier_parameters = 
+  model_bin
+  |> :erlang.binary_to_term()
+  |> Nx.deserialize()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Axon.ModelState<
+  Parameters: 124441420 (497.77 MB)
+  Trainable Parameters: 124441346 (497.77 MB)
+  Trainable State: 74, (296 B)
+>
+```
+
+```elixir
+defmodule MyGPT.Classifier do
+  def classify_text(model, model_parameters, text, opt \\ []) when is_function(model) do
+    with tokenizer <- Keyword.get(opt, :tokenizer),
+         pad_token_id <- Keyword.get(opt, :pad_token_id, 50256),
+         tokenizer_output = Bumblebee.apply_tokenizer(tokenizer, text),
+         max_length_arg <- Keyword.get(opt, :max_length, nil),
+         max_length <- compute_max_length(tokenizer_output, max_length_arg),
+         input_vector <- pad_sample(tokenizer_output, pad_token_id, max_length),
+         prediction <- model.(model_parameters, input_vector),
+         classifier_output <- postprocessing(prediction) do
+      parse_classifier(classifier_output)
+    end
+  end
+
+  defp compute_max_length(tokenizer_output, nil), do: get_input_length(tokenizer_output) + 1
+  defp compute_max_length(_tokenizer_output, max_length), do: max_length + 1
+
+  defp get_input_length(tokenizer_output) do
+    tokenizer_output
+    |> Map.fetch!("input_ids")
+    |> Nx.size()
+  end
+
+  defp pad_sample(tokenizer_output, pad_token_id, max_length) do
+    input_length = Nx.size(tokenizer_output["input_ids"])
+    length_diff = max_length - input_length
+
+    tokenizer_output["input_ids"]
+    |> Nx.pad(pad_token_id, [{0, 0, 0}, {0, length_diff, 0}])
+    |> Nx.reshape({1, max_length})
+    |> then(&%{"input_ids" => &1})
+  end
+
+  defp postprocessing(prediction) do
+    prediction[[.., -1]]
+    |> Axon.Activations.softmax(axis: -1)
+    |> Nx.argmax(axis: -1)
+    |> Nx.gather(Nx.tensor([0]))
+    |> Nx.to_number()
+  end
+
+  defp parse_classifier(1), do: "spam"
+  defp parse_classifier(0), do: "not spam"
+end
+
+alias MyGPT.Classifier
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+MyGPT.Classifier
+```
+
+```elixir
+text = "You are a winner you have been specially selected to receive $1000 cash or a $2000 award."
+
+Classifier.classify_text(predict_fn, classifier_parameters, text, tokenizer: tokenizer)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"spam"
+```
+
+```elixir
+text = "Hey, just wanted to check if we're still on for dinner tonight? Let me know!"
+
+Classifier.classify_text(predict_fn, classifier_parameters, text, tokenizer: tokenizer)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"not spam"
+```
