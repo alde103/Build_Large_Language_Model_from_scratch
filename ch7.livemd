@@ -1,0 +1,88 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Chapter 7: Fine-tuning to follow instructions
+
+```elixir
+Mix.install([
+  {:nx, "~> 0.5"},
+  {:exla, "~> 0.5"},
+  {:axon, "~> 0.5"},
+  {:table_rex, "~> 3.1.1"},
+  {:bumblebee, "~> 0.6.0"},
+  {:explorer, "~> 0.7.1"},
+  {:req, "~> 0.4.5"},
+  {:kino_vega_lite, "~> 0.1.11"}
+])
+
+Nx.global_default_backend(EXLA.Backend)
+```
+
+## Introduction
+
+```elixir
+{:ok, gpt2} = Bumblebee.load_model({:hf, "openai-community/gpt2"})
+{:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, "openai-community/gpt2"})
+{:ok, generation_config} = Bumblebee.load_generation_config({:hf, "openai-community/gpt2"})
+
+serving = Bumblebee.Text.generation(gpt2, tokenizer, generation_config)
+
+text_input = Kino.Input.text("Text", default: "Yesterday, I was reading a book and")
+```
+
+```elixir
+text = Kino.Input.read(text_input)
+Nx.Serving.run(serving, text)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  results: [
+    %{
+      text: " I was thinking, \"What's going on here?\" I was thinking, \"What's going on",
+      token_summary: %{input: 8, output: 20, padding: 0}
+    }
+  ]
+}
+```
+
+```elixir
+%{model: model, params: params} = gpt2
+
+tokenizer =
+      Bumblebee.configure(tokenizer,
+        length: nil,
+        pad_direction: :left,
+        return_token_type_ids: false,
+        return_length: true
+      )
+
+input = Bumblebee.apply_tokenizer(tokenizer, "I want to")
+
+gpt2_model = Axon.nx(model, & &1.logits)
+
+{_init_fn, predict_fn} = Axon.build(gpt2_model)
+
+result = predict_fn.(params, input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32[1][3][50257]
+  EXLA.Backend<host:0, 0.3320473136.43909144.98080>
+  [
+    [
+      [-39.308448791503906, -39.010066986083984, -41.837467193603516, -41.781246185302734, -40.84248352050781, -40.89142990112305, -38.62623596191406, -40.154056549072266, -38.097896575927734, -41.04249954223633, -40.9429931640625, -36.262168884277344, -37.39033889770508, -36.03800964355469, -38.52249526977539, -40.54604721069336, -39.718971252441406, -39.7431640625, -40.27290344238281, -40.314857482910156, -40.54868698120117, -41.00197219848633, -40.9098014831543, -40.914119720458984, -41.297733306884766, -37.69235610961914, -39.106632232666016, -41.460182189941406, -40.526241302490234, -40.43655014038086, -38.97370147705078, -41.32615661621094, -39.90999984741211, -40.565555572509766, -40.7227897644043, -40.8016471862793, -40.875083923339844, -40.86553955078125, -40.39710998535156, -40.221649169921875, -38.78817367553711, -40.58393096923828, -40.43303298950195, -40.767242431640625, -40.72999572753906, -40.78556442260742, -40.461753845214844, -41.084720611572266, -41.600372314453125, -41.25688552856445, ...],
+      ...
+    ]
+  ]
+>
+```
+
+## 7.1 Introduction to instruction fine-tuning
+
+Pre-trained LLMs often struggle with specific instructions. Here, we focus on improving the LLM’s ability to follow such instructions and generate a desired response. Preparing the dataset is a key
+aspect of instruction fine-tuning.
