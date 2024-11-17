@@ -86,3 +86,475 @@ result = predict_fn.(params, input)
 
 Pre-trained LLMs often struggle with specific instructions. Here, we focus on improving the LLM’s ability to follow such instructions and generate a desired response. Preparing the dataset is a key
 aspect of instruction fine-tuning.
+
+## 7.2 Preparing a dataset for supervised instruction fine-tuning
+
+```elixir
+File.cd!(__DIR__)
+instructions_data = File.read!("instruction–response.json")
+{:ok, dataset} = Jason.decode(instructions_data)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ [
+   %{
+     "input" => "freind --> friend",
+     "instruction" => "Evaluate the following phrase by transforming it into the spelling given.",
+     "output" => "The spelling of the given phrase \"freind\" is incorrect, the correct spelling is \"friend\"."
+   },
+   %{
+     "input" => "He go to the park every day.",
+     "instruction" => "Edit the following sentence for grammar.",
+     "output" => "He goes to the park every day."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Convert 45 kilometers to meters.",
+     "output" => "45 kilometers is 45000 meters."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Rewrite this sentence to start with 'Although': Despite the rain, they went for a walk.",
+     "output" => "Although it was raining, they went for a walk."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What are the first 10 square numbers?",
+     "output" => "1, 4, 9, 16, 25, 36, 49, 64, 81, 100."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Suggest a more formal synonym for \"happy.\"",
+     "output" => "A more formal synonym for \"happy\" is \"content.\""
+   },
+   %{
+     "input" => "Where is the nearest restaurant?",
+     "instruction" => "Translate the following sentence into French.",
+     "output" => "Où est le restaurant le plus proche?"
+   },
+   %{
+     "input" => "",
+     "instruction" => "Look up the melting point of iron.",
+     "output" => "The melting point of iron is approximately 1538 degrees Celsius or 2800 degrees Fahrenheit."
+   },
+   %{
+     "input" => "The cake was baked by Sarah.",
+     "instruction" => "Rewrite the following sentence so that it is in active voice.",
+     "output" => "Sarah baked the cake."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Convert the active sentence to passive: 'The manager approved the project.'",
+     "output" => "The project was approved by the manager."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the contraction for \"will not\"?",
+     "output" => "The contraction for \"will not\" is \"won't\"."
+   },
+   %{
+     "input" => "The actual fact is that he was late.",
+     "instruction" => "Rewrite the following sentence to remove redundancy.",
+     "output" => "The fact is that he was late."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the capital of Indonesia?",
+     "output" => "The capital of Indonesia is Jakarta."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Provide a synonym for 'bright'.",
+     "output" => "A synonym for 'bright' is 'radiant'."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Suggest an alternate word for 'happy'.",
+     "output" => "joyful."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Name the device that measures atmospheric pressure.",
+     "output" => "The device that measures atmospheric pressure is a barometer."
+   },
+   %{
+     "input" => "",
+     "instruction" => "List two antonyms for 'intelligent.'",
+     "output" => "Two antonyms for 'intelligent' are 'stupid' and 'dumb.'"
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the pH of a neutral solution at 25°C?",
+     "output" => "The pH of a neutral solution at 25°C is 7."
+   },
+   %{
+     "input" => "'Her eyes are like stars.'",
+     "instruction" => "Rewrite the following sentence to use a metaphor",
+     "output" => "Her eyes are stars in the night sky."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Name three types of biomes.",
+     "output" => "Forest, desert, and grassland."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Identify the climax in 'Romeo and Juliet'.",
+     "output" => "The climax of 'Romeo and Juliet' occurs when Romeo kills Tybalt, leading to his banishment and the subsequent tragic events."
+   },
+   %{
+     "input" => "The dog is very loyal.",
+     "instruction" => "Rewrite the sentence using a simile.",
+     "output" => "The dog is as loyal as a soldier."
+   },
+   %{
+     "input" => "The storm started suddenly.",
+     "instruction" => "Rewrite the sentence using an idiom.",
+     "output" => "The storm came out of the blue."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Convert 10 feet to meters.",
+     "output" => "10 feet is equal to approximately 3.048 meters."
+   },
+   %{
+     "input" => "The chef cooked a delicious meal.",
+     "instruction" => "Convert this sentence to passive voice",
+     "output" => "A delicious meal was cooked by the chef."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the plural form of 'mouse'?",
+     "output" => "The plural form of 'mouse' is 'mice'."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the opposite of 'thin'?",
+     "output" => "The opposite of 'thin' is 'thick'."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the state capital of California?",
+     "output" => "The state capital of California is Sacramento."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Translate 'family' into Italian.",
+     "output" => "The Italian word for 'family' is 'famiglia'."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the past tense of 'draw'?",
+     "output" => "The past tense of 'draw' is 'drew.'"
+   },
+   %{
+     "input" => "The ship sails at dawn.",
+     "instruction" => "Alter the content of the sentence to use the past tense.",
+     "output" => "The ship sailed at dawn."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Generate a sentence that follows the pattern: 'Rarely do I _____'",
+     "output" => "Rarely do I eat fast food."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the atomic number of oxygen?",
+     "output" => "The atomic number of oxygen is 8."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is a synonym of 'luminous'?",
+     "output" => "A synonym for 'luminous' is 'bright'."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the capital of Brazil?",
+     "output" => "The capital of Brazil is Brasília."
+   },
+   %{
+     "input" => "",
+     "instruction" => "List the ingredients required to make a basic salad.",
+     "output" => "Ingredients for a basic salad typically include lettuce, tomatoes, cucumbers, and dressing."
+   },
+   %{
+     "input" => "It's hot outside.",
+     "instruction" => "Rewrite the sentence using a synonym.",
+     "output" => "It's scorching outside."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Provide a synonym for 'happy'.",
+     "output" => "A synonym for 'happy' is 'content'."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the derivative of x^3 + 5x^2 - 3x + 7 with respect to x?",
+     "output" => "3x^2 + 10x - 3."
+   },
+   %{
+     "input" => "She felt a sense of relief.",
+     "instruction" => "Identify the point of view used in the sentence.",
+     "output" => "The point of view used in the sentence is third person."
+   },
+   %{
+     "input" => "",
+     "instruction" => "Generate a sentence using the word 'gregarious'.",
+     "output" => "He was gregarious, making friends wherever he went."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the atomic number of carbon?",
+     "output" => "The atomic number of carbon is 6."
+   },
+   %{
+     "input" => "",
+     "instruction" => "What is the formula for area of a triangle?",
+     "output" => "The formula for the area of a triangle is 1/2 * base * height."
+   },
+   %{
+     "input" => "Zebra, Elephant, Crocodile",
+     "instruction" => "Sort the following list in alphabetical order.",
+     "output" => "Crocodile, Elephant, Zebra"
+   },
+   %{
+     "input" => "Moon and stars",
+     "instruction" => "Reverse the order of the given phrase.",
+     "output" => "Stars and moon"
+   },
+   %{"input" => "", "instruction" => "What is a synonym for 'begin'?", ...},
+   %{"input" => "", ...},
+   %{...},
+   ...
+ ]}
+```
+
+```elixir
+data_length = Enum.count(dataset)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+1100
+```
+
+```elixir
+Enum.at(dataset, 50)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  "input" => "Ocassion",
+  "instruction" => "Identify the correct spelling of the following word.",
+  "output" => "The correct spelling is 'Occasion.'"
+}
+```
+
+Instruction fine-tuning involves training a model on a dataset where the input-output pairs, like those we extracted from the JSON file, are explicitly provided. There are various methods to format these entries for LLMs. There are two different approaches (prompt styles):
+
+* Alpaca prompt style template.
+
+The Alpaca style uses a structured format with defined sections for instruction, input, and response.
+
+```
+**Below is an instruction that describes a task. Write a response that appropriately completes the request.**
+
+### Instruction:
+Identify the correct spelling of the following word.
+
+### Input:
+Ocassion
+
+### Response:
+The correct spelling is 'Occasion'
+```
+
+* Phi-3 prompt style template.
+
+The Phi-3 style employs a simpler format with designated <|user|> and <|assistant|> tokens.
+
+```
+<|user|>
+Identify the correct spelling of the following word: 'Ocassion'
+
+<|assistant>
+The correct spelling is 'Occasion'.
+```
+
+Alpaca was one of the early LLMs to publicly detail its instruction fine-tuning process. Phi-3, developed by Microsoft, is included to demonstrate the diversity in prompt styles.
+
+```elixir
+defmodule MyGPT.Assistant.Formatter do
+  def build_instruction(json) do
+    instruction = 
+    """
+    Below is an instruction that describes a task. Write a response that appropriately completes the request.
+    
+    ### Instruction:
+    #{json["instruction"]}\
+    """
+
+    instruction <> build_input(json)
+  end
+
+  def build_response(json), do: "\n\n### Response:\n#{json["output"]}"
+  defp build_input(%{"input" => input_text}) when input_text == "", do: ""
+  defp build_input(%{"input" => input_text}) do
+    "\n\n### Input:\n#{input_text}"
+  end
+  
+end
+
+alias MyGPT.Assistant.Formatter
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+MyGPT.Assistant.Formatter
+```
+
+```elixir
+prompt =
+  dataset
+  |> Enum.at(50)
+  |> Formatter.build_instruction()
+IO.puts(prompt)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Below is an instruction that describes a task. Write a response that appropriately completes the request.
+
+### Instruction:
+Identify the correct spelling of the following word.
+
+### Input:
+Ocassion
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+```elixir
+response = 
+  dataset
+  |> Enum.at(50)
+  |> Formatter.build_response()
+IO.puts(response)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+
+### Response:
+The correct spelling is 'Occasion.'
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+```elixir
+(prompt <> response) |> IO.puts
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Below is an instruction that describes a task. Write a response that appropriately completes the request.
+
+### Instruction:
+Identify the correct spelling of the following word.
+
+### Input:
+Ocassion
+
+### Response:
+The correct spelling is 'Occasion.'
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+```elixir
+prompt = 
+  dataset
+  |> Enum.at(999)
+  |> Formatter.build_instruction()
+
+response = 
+  dataset
+  |> Enum.at(999)
+  |> Formatter.build_response()
+
+(prompt <> response) |> IO.puts
+Enum.at(dataset, 999)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Below is an instruction that describes a task. Write a response that appropriately completes the request.
+
+### Instruction:
+What is an antonym of 'complicated'?
+
+### Response:
+An antonym of 'complicated' is 'simple'.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  "input" => "",
+  "instruction" => "What is an antonym of 'complicated'?",
+  "output" => "An antonym of 'complicated' is 'simple'."
+}
+```
+
+```elixir
+train_length = floor(data_length * 0.85)
+test_length = floor(data_length * 0.1)
+
+dataset = Enum.shuffle(dataset)
+
+{train_dataset, dataset_tail} = Enum.split(dataset, train_length)
+{test_dataset, validation_dataset} = Enum.split(dataset_tail, test_length)
+
+IO.puts("Training set length: #{Enum.count(train_dataset)}")
+IO.puts("Validation set length: #{Enum.count(validation_dataset)}")
+IO.puts("Test set length: #{Enum.count(test_dataset)}")
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Training set length: 935
+Validation set length: 55
+Test set length: 110
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
