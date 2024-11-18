@@ -72,7 +72,7 @@ result = predict_fn.(params, input)
 ```
 #Nx.Tensor<
   f32[1][3][50257]
-  EXLA.Backend<host:0, 0.3320473136.43909144.98080>
+  EXLA.Backend<host:0, 0.2805699667.4000710680.246591>
   [
     [
       [-39.308448791503906, -39.010066986083984, -41.837467193603516, -41.781246185302734, -40.84248352050781, -40.89142990112305, -38.62623596191406, -40.154056549072266, -38.097896575927734, -41.04249954223633, -40.9429931640625, -36.262168884277344, -37.39033889770508, -36.03800964355469, -38.52249526977539, -40.54604721069336, -39.718971252441406, -39.7431640625, -40.27290344238281, -40.314857482910156, -40.54868698120117, -41.00197219848633, -40.9098014831543, -40.914119720458984, -41.297733306884766, -37.69235610961914, -39.106632232666016, -41.460182189941406, -40.526241302490234, -40.43655014038086, -38.97370147705078, -41.32615661621094, -39.90999984741211, -40.565555572509766, -40.7227897644043, -40.8016471862793, -40.875083923339844, -40.86553955078125, -40.39710998535156, -40.221649169921875, -38.78817367553711, -40.58393096923828, -40.43303298950195, -40.767242431640625, -40.72999572753906, -40.78556442260742, -40.461753845214844, -41.084720611572266, -41.600372314453125, -41.25688552856445, ...],
@@ -558,3 +558,212 @@ Test set length: 110
 ```
 :ok
 ```
+
+## 7.3 Organizing data into training batches
+
+A collate function is responsible for taking a list of individual data samples and merging them into a single batch that can be processed efficiently by the model during training.
+
+```elixir
+defmodule MyGPT.Assistant.Dataset do
+  import MyGPT.Assistant.Formatter
+
+  def build(json_dataset, tokenizer, opt \\ []) do
+    with max_length <- Keyword.get(opt, :max_length),
+         pad_token_id <- Keyword.get(opt, :pad_token_id, 50256),
+         exclude_token_id <- Keyword.get(opt, :exclude_token_id, -100),
+         batch_size <- Keyword.get(opt, :batch_size, 2) do
+
+      json_stream =  Stream.chunk_every(json_dataset, batch_size)
+      
+      for json_batch <- json_stream, reduce: []  do
+        acc ->
+          prompt_batch =  
+            json_batch
+            |> Stream.map(&build_prompt(&1))
+            |> Stream.map(&encode_prompt(&1, tokenizer))
+          
+          max_length_in_batch = 
+            prompt_batch
+            |> Enum.map(fn encoded_prompt -> Nx.size(encoded_prompt["input_ids"]) end)
+            |> Enum.max()
+            |> then(&(max_length || &1))
+          
+          input = 
+            prompt_batch
+            |> Enum.map(&build_input(&1, pad_token_id, max_length_in_batch))
+            |> Nx.Batch.stack()
+
+          label = 
+            prompt_batch
+            |> Enum.map(&build_label(&1, pad_token_id, exclude_token_id, max_length_in_batch))
+            |> Nx.Batch.stack()
+
+          acc ++ [{input, label}]
+      end
+    end
+  end
+
+  def build_prompt(json), do: build_instruction(json) <> build_response(json)
+  def encode_prompt(prompt, tokenizer), do: Bumblebee.apply_tokenizer(tokenizer, prompt)
+
+  def build_input(%{"input_ids" => encoded_prompt}, pad_token_id, max_length) do
+    input_length = Nx.size(encoded_prompt)
+    length_diff = max_length - input_length
+
+    encoded_prompt
+    |> Nx.pad(pad_token_id, [{0, 0, 0}, {0, length_diff, 0}])
+    |> Nx.reshape({max_length})
+    |> then(&(%{"input_ids" => &1}))
+  end
+  
+  def build_label(%{"input_ids" => encoded_prompt}, pad_token_id, exclude_token_id, max_length) do
+    input_length = Nx.size(encoded_prompt)
+    label_tensor = 
+      encoded_prompt[[.., 1..(input_length-1)]]
+      |> Nx.pad(pad_token_id, [{0, 0, 0}, {0, 1, 0}])
+    
+    length_diff = max_length - input_length
+
+    label_tensor
+    |> Nx.pad(exclude_token_id, [{0, 0, 0}, {0, length_diff, 0}])
+    |> Nx.reshape({max_length})
+  end
+end
+
+alias MyGPT.Assistant.Dataset
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+MyGPT.Assistant.Dataset
+```
+
+```elixir
+res = Dataset.build(train_dataset, tokenizer)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, pad: 0, ...>},
+  {#Nx.Batch<size: 2, pad: 0, ...>, #Nx.Batch<size: 2, ...>},
+  {#Nx.Batch<size: 2, ...>, #Nx.Batch<...>},
+  {#Nx.Batch<...>, ...},
+  {...},
+  ...
+]
+```
+
+```elixir
+{input, label} = Enum.at(res, 1)
+input = Nx.Defn.jit_apply(&Function.identity/1, [input])
+label = Nx.Defn.jit_apply(&Function.identity/1, [label])
+
+IO.inspect({input, label}, limit: :infinity)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{%{
+   "input_ids" => #Nx.Tensor<
+     u32[2][59]
+     EXLA.Backend<host:0, 0.2805699667.4000972833.51805>
+     [
+       [21106, 318, 281, 12064, 326, 8477, 257, 4876, 13, 19430, 257, 2882, 326, 20431, 32543, 262, 2581, 13, 198, 198, 21017, 46486, 25, 198, 3103, 1851, 262, 9546, 656, 257, 1844, 6827, 13, 198, 198, 21017, 23412, 25, 198, 3847, 6766, 198, 198, 21017, 18261, 25, 198, 464, 1755, 6766, 373, 38745, 351, 12925, 665, 676, 1359, 5788, 13],
+       [21106, 318, 281, 12064, 326, 8477, 257, 4876, 13, 19430, 257, 2882, 326, 20431, 32543, 262, 2581, 13, 198, 198, 21017, 46486, 25, 198, 30003, 6525, 262, 1708, 6827, 284, 779, 257, 23094, 25, 705, 6653, 2456, 2005, 9211, 621, 257, 9845, 2637, 198, 198, 21017, 18261, 25, 198, 6653, 2456, 547, 257, 9845, 11, 7720, 2769, 13, 50256]
+     ]
+   >
+ },
+ #Nx.Tensor<
+   s64[2][59]
+   EXLA.Backend<host:0, 0.2805699667.4000972833.51806>
+   [
+     [318, 281, 12064, 326, 8477, 257, 4876, 13, 19430, 257, 2882, 326, 20431, 32543, 262, 2581, 13, 198, 198, 21017, 46486, 25, 198, 3103, 1851, 262, 9546, 656, 257, 1844, 6827, 13, 198, 198, 21017, 23412, 25, 198, 3847, 6766, 198, 198, 21017, 18261, 25, 198, 464, 1755, 6766, 373, 38745, 351, 12925, 665, 676, 1359, 5788, 13, 50256],
+     [318, 281, 12064, 326, 8477, 257, 4876, 13, 19430, 257, 2882, 326, 20431, 32543, 262, 2581, 13, 198, 198, 21017, 46486, 25, 198, 30003, 6525, 262, 1708, 6827, 284, 779, 257, 23094, 25, 705, 6653, 2456, 2005, 9211, 621, 257, 9845, 2637, 198, 198, 21017, 18261, 25, 198, 6653, 2456, 547, 257, 9845, 11, 7720, 2769, 13, 50256, -100]
+   ]
+ >}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{%{
+   "input_ids" => #Nx.Tensor<
+     u32[2][59]
+     EXLA.Backend<host:0, 0.2805699667.4000972833.51805>
+     [
+       [21106, 318, 281, 12064, 326, 8477, 257, 4876, 13, 19430, 257, 2882, 326, 20431, 32543, 262, 2581, 13, 198, 198, 21017, 46486, 25, 198, 3103, 1851, 262, 9546, 656, 257, 1844, 6827, 13, 198, 198, 21017, 23412, 25, 198, 3847, 6766, 198, 198, 21017, 18261, 25, 198, 464, ...],
+       ...
+     ]
+   >
+ },
+ #Nx.Tensor<
+   s64[2][59]
+   EXLA.Backend<host:0, 0.2805699667.4000972833.51806>
+   [
+     [318, 281, 12064, 326, 8477, 257, 4876, 13, 19430, 257, 2882, 326, 20431, 32543, 262, 2581, 13, 198, 198, 21017, 46486, 25, 198, 3103, 1851, 262, 9546, 656, 257, 1844, 6827, 13, 198, 198, 21017, 23412, 25, 198, 3847, 6766, 198, 198, 21017, 18261, 25, 198, 464, 1755, ...],
+     ...
+   ]
+ >}
+```
+
+We assign a -100 placeholder value to all padding tokens. This special value allows us to exclude these padding tokens from contributing to the training loss calculation, ensuring that only meaningful data influences model learning.
+
+However, we retain one end-of-text token, ID 50256. Retaining it allows the LLM to learn when to generate an end-of-text token in response to instructions, which we use as an indicator that the generated response is complete.
+
+The default setting of the cross entropy function in PyTorch is cross_entropy(..., ignore_index=-100). This means that it ignores targets labeled with -100. We take advantage of this ignore_index to ignore the additional end-of-text (padding) tokens that we used to pad the training examples to have the same length in each batch.
+
+However, we want to keep one 50256 (end-of-text) token ID in the targets because it helps the LLM to learn to generate end-of-text tokens
+.
+In addition to masking out padding tokens, it is also common to mask out the target token IDs that correspond to the instruction. By masking out the LLM’s target token IDs corresponding to the instruction, the cross entropy loss is only computed for the generated response target IDs. Thus, the model
+is trained to focus on generating accurate responses rather than memorizing instructions, which can help reduce overfitting.
+
+As of this writing, researchers are divided on whether masking the instructions is universally beneficial during instruction fine-tuning.
