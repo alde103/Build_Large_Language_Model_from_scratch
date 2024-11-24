@@ -3002,3 +3002,21 @@ such as:
 
 * Using a larger pretrained model, which may have greater capacity to capture
   complex patterns and generate more accurate responses
+
+## 7.9 Conclusion
+
+**7.9.1 What’s next?**
+
+Preference fine-tuning is particularly useful for customizing a model to better align with specific user preferences.
+
+**7.9.2 Staying up to date in a fast-moving field**
+
+One way to keep up with the latest advancements is to explore recent research papers on [arXiv](https://arxiv.org/list/cs.LG/recent).
+
+Additionally, many researchers and practitioners are very active in sharing and discussing the latest developments on social media platforms like X (formerly Twitter) and Reddit. 
+The subreddit r/LocalLLaMA, in particular, is a good resource for connecting with the community and staying informed about the latest tools and trends. I also regularly share insights and write about the latest in LLM research on [this blog](https://sebastianraschka.com/blog/).
+
+**7.9.3 Final words**
+
+Expopular tools such as [Axolotl](https://github.com/OpenAccess
+-AI-Collective/axolotl) or [LitGPT](https://github.com/Lightning-AI/litgpt).
